@@ -1,6 +1,6 @@
 import { mkdir, appendFile } from "node:fs/promises";
-import { homedir } from "node:os";
-import { join } from "node:path";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 export type AuditAction =
     | "read"
@@ -23,14 +23,12 @@ export interface AuditEvent {
     status: AuditStatus;
 }
 
-const LOG_DIRECTORY = join(
-    homedir(),
-    ".local",
-    "share",
-    "local-filesystem-mcp",
+const LOG_DIRECTORY = resolve(
+    dirname(fileURLToPath(import.meta.url)),
+    "../../logs",
 );
 
-const LOG_FILE = join(LOG_DIRECTORY, "audit.log");
+const LOG_FILE = resolve(LOG_DIRECTORY, "audit.log");
 
 export async function logAuditEvent(event: AuditEvent): Promise<void> {
     const record = {
