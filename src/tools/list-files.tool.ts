@@ -1,9 +1,8 @@
 import type { McpServer } from "@modelcontextprotocol/server";
 import * as z from "zod/v4";
-
 import { readdir } from "node:fs/promises";
 
-import { withAudit } from '../security/audit-log.js';
+import { logAuditEvent } from "../security/audit-log.js";
 import { validatePath } from "../security/path-validator.js";
 import { assertPermission } from "../security/permissions.js";
 import { getErrorMessage } from "../utils/errors.js";
@@ -17,12 +16,13 @@ export function registerListFilesTool(server: McpServer): void {
                 path: z.string().describe("Absolute directory path"),
             }),
         },
-        async ({ path }) => withAudit("read", path, async (setValidatedPath) => {
+        async ({ path }) => {
+            let safePath = path;
+
             try {
                 assertPermission("read");
 
-                const safePath = await validatePath(path);
-                setValidatedPath(safePath);
+                safePath = await validatePath(path);
 
                 const entries = await readdir(safePath, {
                     withFileTypes: true,
@@ -33,6 +33,12 @@ export function registerListFilesTool(server: McpServer): void {
                     type: entry.isDirectory() ? "directory" : "file",
                 }));
 
+                await logAuditEvent({
+                    action: "read",
+                    path: safePath,
+                    status: "success",
+                });
+
                 return {
                     content: [
                         {
@@ -42,6 +48,12 @@ export function registerListFilesTool(server: McpServer): void {
                     ],
                 };
             } catch (error) {
+                await logAuditEvent({
+                    action: "read",
+                    path: safePath,
+                    status: "failure",
+                });
+
                 return {
                     content: [
                         {
@@ -52,6 +64,6 @@ export function registerListFilesTool(server: McpServer): void {
                     isError: true,
                 };
             }
-        }),
+        },
     );
 }

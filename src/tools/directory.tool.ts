@@ -3,8 +3,9 @@ import type { McpServer } from '@modelcontextprotocol/server';
 import * as z from 'zod/v4';
 
 import { mkdir, rmdir } from 'node:fs/promises';
+import { basename, dirname, join } from 'node:path';
 
-import { withAudit } from '../security/audit-log.js';
+import { logAuditEvent } from '../security/audit-log.js';
 import { validatePath } from '../security/path-validator.js';
 import { assertPermission } from '../security/permissions.js';
 import { getErrorMessage } from '../utils/errors.js';
@@ -18,19 +19,24 @@ export function registerDirectoryTool(server: McpServer): void {
                 path: z.string().min(1).describe('Absolute directory path to create'),
             }),
         },
-        async ({ path }) => withAudit('create_directory', path, async (setValidatedPath) => {
+        async ({ path }) => {
+            let auditPath = path;
+
             try {
                 assertPermission('write');
 
-                // Validate parent directory before creating
-                const safeParent = await validatePath(
-                    path.substring(0, path.lastIndexOf('/')) || '/',
-                );
+                const safeParent = await validatePath(dirname(path));
+                const directoryPath = join(safeParent, basename(path));
 
-                const directoryPath = `${safeParent}/${path.split('/').pop()}`;
-                setValidatedPath(directoryPath);
+                auditPath = directoryPath;
 
                 await mkdir(directoryPath);
+
+                await logAuditEvent({
+                    action: 'create_directory',
+                    path: directoryPath,
+                    status: 'success',
+                });
 
                 return {
                     content: [
@@ -41,6 +47,12 @@ export function registerDirectoryTool(server: McpServer): void {
                     ],
                 };
             } catch (error) {
+                await logAuditEvent({
+                    action: 'create_directory',
+                    path: auditPath,
+                    status: 'failure',
+                });
+
                 return {
                     content: [
                         {
@@ -51,7 +63,7 @@ export function registerDirectoryTool(server: McpServer): void {
                     isError: true,
                 };
             }
-        }),
+        },
     );
 
     server.registerTool(
@@ -62,14 +74,22 @@ export function registerDirectoryTool(server: McpServer): void {
                 path: z.string().min(1).describe('Absolute directory path to delete'),
             }),
         },
-        async ({ path }) => withAudit('delete_directory', path, async (setValidatedPath) => {
+        async ({ path }) => {
+            let auditPath = path;
+
             try {
                 assertPermission('delete');
 
                 const safePath = await validatePath(path);
-                setValidatedPath(safePath);
+                auditPath = safePath;
 
                 await rmdir(safePath);
+
+                await logAuditEvent({
+                    action: 'delete_directory',
+                    path: safePath,
+                    status: 'success',
+                });
 
                 return {
                     content: [
@@ -80,6 +100,12 @@ export function registerDirectoryTool(server: McpServer): void {
                     ],
                 };
             } catch (error) {
+                await logAuditEvent({
+                    action: 'delete_directory',
+                    path: auditPath,
+                    status: 'failure',
+                });
+
                 return {
                     content: [
                         {
@@ -90,6 +116,6 @@ export function registerDirectoryTool(server: McpServer): void {
                     isError: true,
                 };
             }
-        }),
+        },
     );
 }

@@ -1,70 +1,69 @@
+import { createServer } from "node:http";
 
-// import { createServer } from 'node:http';
+import { McpServer, createMcpHandler } from "@modelcontextprotocol/server";
+import { toNodeHandler } from "@modelcontextprotocol/node";
 
-// import { McpServer, createMcpHandler } from '@modelcontextprotocol/server';
+import { env } from "../config/env.js";
+import { authenticateRequest } from "../security/authentication.js";
 
-// import {
-//     toNodeHandler,
-//     localhostHostValidation,
-//     localhostOriginValidation,
-// } from '@modelcontextprotocol/node';
+export function startHttpTransport(server: McpServer): void {
+    const handler = createMcpHandler(() => server);
+    const nodeHandler = toNodeHandler(handler);
 
-// import { registerAllTools } from '../tools/register-all-tools.js';
+    const httpServer = createServer(async (req, res) => {
+        if (req.url?.split("?")[0] !== "/mcp") {
+            res.writeHead(404);
+            res.end("Not Found");
+            return;
+        }
 
-// const HOST = '127.0.0.1';
-// const PORT = 3000;
+        // TODO: We need web page for authentication, so now just check for the token in the header and if it matches, allow the request to proceed. If not, return 401 Unauthorized.
+        // const authorized = authenticateRequest(req.headers.authorization);
 
-// // Create an HTTP MCP handler.
-// const handler = createMcpHandler(() => {
-//     const server = new McpServer({
-//         name: 'local-filesystem-mcp',
-//         version: '1.0.0',
-//     });
+        // if (!authorized) {
+        //     res.writeHead(401, {
+        //         "Content-Type": "application/json",
+        //     });
 
-//     registerAllTools(server);
+        //     res.end(
+        //         JSON.stringify({
+        //             error: "Unauthorized",
+        //         }),
+        //     );
 
-//     return server;
-// });
+        //     return;
+        // }
 
-// // Adapt the MCP handler for Node.js HTTP.
-// const nodeHandler = toNodeHandler(handler);
+        try {
+            await nodeHandler(
+                req as unknown as Parameters<typeof nodeHandler>[0],
+                res,
+            );
+        } catch {
+            if (!res.headersSent) {
+                res.writeHead(500);
+                res.end("Internal Server Error");
+            }
+        }
+    });
 
-// // Enable localhost security validation.
-// const validateHost = localhostHostValidation();
-// const validateOrigin = localhostOriginValidation();
+    httpServer.listen(env.HTTP_PORT, env.HTTP_HOST, () => {
+        console.error("Local Filesystem MCP HTTP Server started");
+        console.error(`Host: ${env.HTTP_HOST}`);
+        console.error(`Port: ${env.HTTP_PORT}`);
+        console.error(`MCP Endpoint: http://${env.HTTP_HOST}:${env.HTTP_PORT}/mcp`);
+    });
 
-// // Create the HTTP server.
-// const httpServer = createServer((req, res) => {
-//     if (!validateHost(req, res) || !validateOrigin(req, res)) {
-//         return;
-//     }
+    async function shutdown(): Promise<void> {
+        httpServer.close();
+        await handler.close();
+    }
 
-//     if (req.url?.split('?')[0] !== '/mcp') {
-//         res.writeHead(404);
-//         res.end('Not Found');
-//         return;
-//     }
+    process.once("SIGINT", () => {
+        void shutdown();
+    });
 
-//     void nodeHandler(req, res);
-// });
-
-// // Start the HTTP server.
-// httpServer.listen(PORT, HOST, () => {
-//     console.error('Local Filesystem MCP HTTP Server is running');
-//     console.error(`Endpoint: http://${HOST}:${PORT}/mcp`);
-// });
-
-// // Handle graceful shutdown.
-// async function shutdown(): Promise<void> {
-//     httpServer.close();
-//     await handler.close();
-//     process.exit(0);
-// }
-
-// process.on('SIGINT', () => {
-//     void shutdown();
-// });
-
-// process.on('SIGTERM', () => {
-//     void shutdown();
-// });
+    process.once("SIGTERM", () => {
+        void shutdown();
+    });
+}

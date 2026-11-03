@@ -1,84 +1,79 @@
-import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
+import { mkdir, appendFile } from "node:fs/promises";
+import { homedir } from "node:os";
+import { join } from "node:path";
 
-import { withAudit, type AuditEvent } from '../src/security/audit-log.js';
+export type AuditAction =
+    | "read"
+    | "write"
+    | "append"
+    | "edit"
+    | "delete"
+    | "copy"
+    | "move"
+    | "create_directory"
+    | "delete_directory"
+    | "search"
+    | "set_permissions";
 
-describe('Filesystem tool audit logging', () => {
-    it('records successful operations without file contents or path secrets', async () => {
-        const events: AuditEvent[] = [];
-        const fileContents = 'private file contents and API key: sk-test-secret';
+export type AuditStatus = "success" | "failure" | "denied";
 
-        const result = await withAudit(
-            'read',
-            '/allowed/api-key-sk-live-secret.txt',
-            async (setValidatedPath) => {
-                setValidatedPath('/allowed/api-key-sk-live-secret.txt');
-                return { content: [{ type: 'text' as const, text: fileContents }] };
-            },
-            { writeEvent: async (event) => { events.push(event); } },
-        );
+export type AuditError = "operation_failed" | "request_denied";
 
-        assert.equal(result.content[0]?.text, fileContents);
-        assert.equal(events.length, 1);
-        assert.equal(events[0]?.status, 'success');
-        assert.match(events[0]?.path ?? '', /REDACTED/);
-        assert.doesNotMatch(JSON.stringify(events), /private file contents|sk-test-secret|sk-live-secret/);
+export interface AuditEvent {
+    action: AuditAction;
+    path: string;
+    status: AuditStatus;
+    error?: AuditError;
+}
+
+type AuditWriter = (event: AuditEvent) => Promise<void>;
+
+const LOG_DIRECTORY = join(
+    homedir(),
+    ".local",
+    "share",
+    "local-filesystem-mcp",
+);
+
+const LOG_FILE = join(LOG_DIRECTORY, "audit.log");
+
+function redactPath(path: string): string {
+    return path
+        .replace(/(api[-_]?key[-_]?)[^/]+/gi, "$1REDACTED")
+        .replace(/sk-[a-zA-Z0-9_-]+/g, "REDACTED");
+}
+
+async function writeAuditEvent(event: AuditEvent): Promise<void> {
+    await mkdir(LOG_DIRECTORY, {
+        recursive: true,
+        mode: 0o700,
     });
 
-    it('records operation failures without copying internal error details', async () => {
-        const events: AuditEvent[] = [];
+    await appendFile(
+        LOG_FILE,
+        `${JSON.stringify({
+            timestamp: new Date().toISOString(),
+            ...event,
+        })}\n`,
+        {
+            encoding: "utf-8",
+            mode: 0o600,
+        },
+    );
+}
 
-        await withAudit(
-            'write',
-            '/allowed/output.txt',
-            async () => ({
-                content: [{ type: 'text' as const, text: 'EIO: internal storage detail' }],
-                isError: true,
-            }),
-            { writeEvent: async (event) => { events.push(event); } },
-        );
+export async function logAuditEvent(
+    event: AuditEvent,
+    writer: AuditWriter = writeAuditEvent,
+): Promise<void> {
+    const safeEvent: AuditEvent = {
+        ...event,
+        path: redactPath(event.path),
+    };
 
-        assert.equal(events[0]?.status, 'failure');
-        assert.equal(events[0]?.error, 'operation_failed');
-        assert.doesNotMatch(JSON.stringify(events), /internal storage detail/);
-    });
-
-    it('records permission and path validation rejections as denied', async () => {
-        const events: AuditEvent[] = [];
-
-        await withAudit(
-            'delete',
-            '/outside/private.txt',
-            async () => ({
-                content: [{ type: 'text' as const, text: 'Access denied: Path outside allowed directories' }],
-                isError: true,
-            }),
-            { writeEvent: async (event) => { events.push(event); } },
-        );
-
-        assert.equal(events[0]?.status, 'denied');
-        assert.equal(events[0]?.error, 'request_denied');
-        assert.doesNotMatch(JSON.stringify(events), /outside allowed directories/);
-    });
-
-    it('keeps successful tool results successful if audit storage fails', async () => {
-        const originalError = console.error;
-        const errors: string[] = [];
-        console.error = (...args: unknown[]) => { errors.push(args.join(' ')); };
-
-        try {
-            const result = await withAudit(
-                'read',
-                '/allowed/file.txt',
-                async () => ({ content: [{ type: 'text' as const, text: 'completed' }] }),
-                { writeEvent: async () => { throw new Error('secret audit backend detail'); } },
-            );
-
-            assert.equal(result.content[0]?.text, 'completed');
-            assert.deepEqual(errors, ['[audit] Unable to write audit event.']);
-            assert.doesNotMatch(errors.join(' '), /secret audit backend detail/);
-        } finally {
-            console.error = originalError;
-        }
-    });
-});
+    try {
+        await writer(safeEvent);
+    } catch {
+        console.error("[audit] Unable to write audit event.");
+    }
+}

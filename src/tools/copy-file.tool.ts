@@ -1,9 +1,10 @@
+
 import type { McpServer } from "@modelcontextprotocol/server";
 import * as z from "zod/v4";
 
 import { copyFile } from "node:fs/promises";
 
-import { withAudit } from '../security/audit-log.js';
+import { logAuditEvent } from "../security/audit-log.js";
 import { validatePath } from "../security/path-validator.js";
 import { assertPermission } from "../security/permissions.js";
 import { getErrorMessage } from "../utils/errors.js";
@@ -21,18 +22,24 @@ export function registerCopyFileTool(server: McpServer): void {
           .describe("Absolute destination file path"),
       }),
     },
-    async ({ source, destination }) => withAudit("copy", `${source} -> ${destination}`, async (setValidatedPath) => {
+    async ({ source, destination }) => {
+      let auditPath = `${source} -> ${destination}`;
+
       try {
-        // Check write permission
         assertPermission("write");
 
-        // Validate source and destination paths
         const safeSource = await validatePath(source);
         const safeDestination = await validatePath(destination);
-        setValidatedPath(`${safeSource} -> ${safeDestination}`);
 
-        // Copy file
+        auditPath = `${safeSource} -> ${safeDestination}`;
+
         await copyFile(safeSource, safeDestination);
+
+        await logAuditEvent({
+          action: "copy",
+          path: auditPath,
+          status: "success",
+        });
 
         return {
           content: [
@@ -43,6 +50,12 @@ export function registerCopyFileTool(server: McpServer): void {
           ],
         };
       } catch (error) {
+        await logAuditEvent({
+          action: "copy",
+          path: auditPath,
+          status: "failure",
+        });
+
         return {
           content: [
             {
@@ -53,6 +66,6 @@ export function registerCopyFileTool(server: McpServer): void {
           isError: true,
         };
       }
-    }),
+    },
   );
 }

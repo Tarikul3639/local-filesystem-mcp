@@ -3,7 +3,7 @@ import type { McpServer } from '@modelcontextprotocol/server';
 import * as z from 'zod/v4';
 import { readFile, writeFile } from 'node:fs/promises';
 
-import { withAudit } from '../security/audit-log.js';
+import { logAuditEvent } from '../security/audit-log.js';
 import { validatePath } from '../security/path-validator.js';
 import { assertPermission } from '../security/permissions.js';
 import { getErrorMessage } from '../utils/errors.js';
@@ -19,12 +19,14 @@ export function registerEditFileTool(server: McpServer): void {
                 newText: z.string(),
             }),
         },
-        async ({ path, oldText, newText }) => withAudit("edit", path, async (setValidatedPath) => {
+        async ({ path, oldText, newText }) => {
+            let auditPath = path;
+
             try {
                 assertPermission('write');
 
                 const safePath = await validatePath(path);
-                setValidatedPath(safePath);
+                auditPath = safePath;
 
                 const original = await readFile(safePath, 'utf-8');
 
@@ -36,6 +38,12 @@ export function registerEditFileTool(server: McpServer): void {
 
                 await writeFile(safePath, updated, 'utf-8');
 
+                await logAuditEvent({
+                    action: 'edit',
+                    path: safePath,
+                    status: 'success',
+                });
+
                 return {
                     content: [{
                         type: 'text' as const,
@@ -43,6 +51,12 @@ export function registerEditFileTool(server: McpServer): void {
                     }],
                 };
             } catch (error) {
+                await logAuditEvent({
+                    action: 'edit',
+                    path: auditPath,
+                    status: 'failure',
+                });
+
                 return {
                     content: [{
                         type: 'text' as const,
@@ -51,6 +65,6 @@ export function registerEditFileTool(server: McpServer): void {
                     isError: true,
                 };
             }
-        }),
+        },
     );
 }

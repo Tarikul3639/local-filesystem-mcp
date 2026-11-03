@@ -5,7 +5,7 @@ import * as z from 'zod/v4';
 import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { withAudit } from '../security/audit-log.js';
+import { logAuditEvent } from '../security/audit-log.js';
 import { validatePath } from '../security/path-validator.js';
 import { assertPermission } from '../security/permissions.js';
 import { getErrorMessage } from '../utils/errors.js';
@@ -20,14 +20,14 @@ export function registerSearchFilesTool(server: McpServer): void {
                 query: z.string().min(1).describe('File or directory name to search for'),
             }),
         },
-        async ({ path, query }) => withAudit("search", path, async (setValidatedPath) => {
+        async ({ path, query }) => {
+            let auditPath = path;
+
             try {
-                // Check read permission
                 assertPermission('read');
 
-                // Validate directory path
                 const safePath = await validatePath(path);
-                setValidatedPath(safePath);
+                auditPath = safePath;
 
                 const results: string[] = [];
 
@@ -43,7 +43,7 @@ export function registerSearchFilesTool(server: McpServer): void {
                             results.push(fullPath);
                         }
 
-                        // Search inside subdirectories
+                        // Do not follow symbolic links.
                         if (entry.isDirectory()) {
                             await searchDirectory(fullPath);
                         }
@@ -51,6 +51,12 @@ export function registerSearchFilesTool(server: McpServer): void {
                 }
 
                 await searchDirectory(safePath);
+
+                await logAuditEvent({
+                    action: 'search',
+                    path: safePath,
+                    status: 'success',
+                });
 
                 return {
                     content: [
@@ -61,6 +67,12 @@ export function registerSearchFilesTool(server: McpServer): void {
                     ],
                 };
             } catch (error) {
+                await logAuditEvent({
+                    action: 'search',
+                    path: auditPath,
+                    status: 'failure',
+                });
+
                 return {
                     content: [
                         {
@@ -71,6 +83,6 @@ export function registerSearchFilesTool(server: McpServer): void {
                     isError: true,
                 };
             }
-        }),
+        },
     );
 }

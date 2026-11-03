@@ -4,7 +4,7 @@ import * as z from 'zod/v4';
 import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { withAudit } from '../security/audit-log.js';
+import { logAuditEvent } from '../security/audit-log.js';
 import { validatePath } from '../security/path-validator.js';
 import { assertPermission } from '../security/permissions.js';
 import { getErrorMessage } from '../utils/errors.js';
@@ -19,12 +19,14 @@ export function registerGetDirectoryTreeTool(server: McpServer): void {
                 maxDepth: z.number().int().min(1).max(10).default(5),
             }),
         },
-        async ({ path, maxDepth }) => withAudit("read", path, async (setValidatedPath) => {
+        async ({ path, maxDepth }) => {
+            let auditPath = path;
+
             try {
                 assertPermission('read');
 
                 const safePath = await validatePath(path);
-                setValidatedPath(safePath);
+                auditPath = safePath;
 
                 async function buildTree(
                     directory: string,
@@ -65,6 +67,12 @@ export function registerGetDirectoryTreeTool(server: McpServer): void {
 
                 const tree = await buildTree(safePath, 1);
 
+                await logAuditEvent({
+                    action: 'read',
+                    path: safePath,
+                    status: 'success',
+                });
+
                 return {
                     content: [{
                         type: 'text' as const,
@@ -72,6 +80,12 @@ export function registerGetDirectoryTreeTool(server: McpServer): void {
                     }],
                 };
             } catch (error) {
+                await logAuditEvent({
+                    action: 'read',
+                    path: auditPath,
+                    status: 'failure',
+                });
+
                 return {
                     content: [{
                         type: 'text' as const,
@@ -80,6 +94,6 @@ export function registerGetDirectoryTreeTool(server: McpServer): void {
                     isError: true,
                 };
             }
-        }),
+        },
     );
 }

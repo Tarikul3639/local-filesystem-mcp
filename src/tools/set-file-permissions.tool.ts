@@ -1,8 +1,9 @@
+
 import type { McpServer } from "@modelcontextprotocol/server";
 import * as z from "zod/v4";
 import { chmod } from "node:fs/promises";
 
-import { withAudit } from '../security/audit-log.js';
+import { logAuditEvent } from "../security/audit-log.js";
 import { validatePath } from "../security/path-validator.js";
 import { assertPermission } from "../security/permissions.js";
 import { getErrorMessage } from "../utils/errors.js";
@@ -22,14 +23,22 @@ export function registerSetFilePermissionsTool(server: McpServer): void {
                     .describe("Permission mode, for example 0o644 or decimal 420"),
             }),
         },
-        async ({ path, mode }) => withAudit("set_permissions", path, async (setValidatedPath) => {
+        async ({ path, mode }) => {
+            let auditPath = path;
+
             try {
                 assertPermission("write");
 
                 const safePath = await validatePath(path);
-                setValidatedPath(safePath);
+                auditPath = safePath;
 
                 await chmod(safePath, mode);
+
+                await logAuditEvent({
+                    action: "set_permissions",
+                    path: safePath,
+                    status: "success",
+                });
 
                 return {
                     content: [
@@ -40,6 +49,12 @@ export function registerSetFilePermissionsTool(server: McpServer): void {
                     ],
                 };
             } catch (error) {
+                await logAuditEvent({
+                    action: "set_permissions",
+                    path: auditPath,
+                    status: "failure",
+                });
+
                 return {
                     content: [
                         {
@@ -50,6 +65,6 @@ export function registerSetFilePermissionsTool(server: McpServer): void {
                     isError: true,
                 };
             }
-        }),
+        },
     );
 }

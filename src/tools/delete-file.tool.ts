@@ -4,7 +4,7 @@ import * as z from 'zod/v4';
 
 import { unlink } from 'node:fs/promises';
 
-import { withAudit } from '../security/audit-log.js';
+import { logAuditEvent } from '../security/audit-log.js';
 import { validatePath } from '../security/path-validator.js';
 import { assertPermission } from '../security/permissions.js';
 import { getErrorMessage } from '../utils/errors.js';
@@ -18,17 +18,22 @@ export function registerDeleteFileTool(server: McpServer): void {
                 path: z.string().min(1).describe('Absolute file path to delete'),
             }),
         },
-        async ({ path }) => withAudit("delete", path, async (setValidatedPath) => {
+        async ({ path }) => {
+            let auditPath = path;
+
             try {
-                // Check delete permission
                 assertPermission('delete');
 
-                // Validate file path
                 const safePath = await validatePath(path);
-                setValidatedPath(safePath);
+                auditPath = safePath;
 
-                // Delete file
                 await unlink(safePath);
+
+                await logAuditEvent({
+                    action: 'delete',
+                    path: safePath,
+                    status: 'success',
+                });
 
                 return {
                     content: [
@@ -39,6 +44,12 @@ export function registerDeleteFileTool(server: McpServer): void {
                     ],
                 };
             } catch (error) {
+                await logAuditEvent({
+                    action: 'delete',
+                    path: auditPath,
+                    status: 'failure',
+                });
+
                 return {
                     content: [
                         {
@@ -49,6 +60,6 @@ export function registerDeleteFileTool(server: McpServer): void {
                     isError: true,
                 };
             }
-        }),
+        },
     );
 }

@@ -1,3 +1,4 @@
+
 import "dotenv/config";
 
 import { homedir } from "node:os";
@@ -5,6 +6,7 @@ import { delimiter, isAbsolute } from "node:path";
 import * as z from "zod/v4";
 
 const envSchema = z.object({
+    // Filesystem configuration
     FILESYSTEM_ROOTS: z
         .string()
         .default(homedir())
@@ -33,6 +35,21 @@ const envSchema = z.object({
         .enum(["true", "false"])
         .default("false")
         .transform((value) => value === "true"),
+
+    // HTTP server configuration
+    HTTP_HOST: z
+        .literal("127.0.0.1")
+        .default("127.0.0.1"),
+
+    HTTP_PORT: z.coerce
+        .number()
+        .int()
+        .min(1)
+        .max(65535)
+        .default(3002),
+
+    // MCP Authentication
+    MCP_AUTH_TOKEN: z.string().min(1, "MCP_AUTH_TOKEN cannot be empty"),
 });
 
 const result = envSchema.safeParse(process.env);

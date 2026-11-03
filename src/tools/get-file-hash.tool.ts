@@ -4,7 +4,7 @@ import * as z from 'zod/v4';
 import { createReadStream } from 'node:fs';
 import { createHash } from 'node:crypto';
 
-import { withAudit } from '../security/audit-log.js';
+import { logAuditEvent } from '../security/audit-log.js';
 import { validatePath } from '../security/path-validator.js';
 import { assertPermission } from '../security/permissions.js';
 import { getErrorMessage } from '../utils/errors.js';
@@ -18,12 +18,14 @@ export function registerGetFileHashTool(server: McpServer): void {
                 path: z.string().min(1),
             }),
         },
-        async ({ path }) => withAudit("read", path, async (setValidatedPath) => {
+        async ({ path }) => {
+            let auditPath = path;
+
             try {
                 assertPermission('read');
 
                 const safePath = await validatePath(path);
-                setValidatedPath(safePath);
+                auditPath = safePath;
 
                 const hash = createHash('sha256');
                 const stream = createReadStream(safePath);
@@ -32,17 +34,31 @@ export function registerGetFileHashTool(server: McpServer): void {
                     hash.update(chunk);
                 }
 
+                const fileHash = hash.digest('hex');
+
+                await logAuditEvent({
+                    action: 'read',
+                    path: safePath,
+                    status: 'success',
+                });
+
                 return {
                     content: [{
                         type: 'text' as const,
                         text: JSON.stringify({
                             path: safePath,
                             algorithm: 'SHA-256',
-                            hash: hash.digest('hex'),
+                            hash: fileHash,
                         }, null, 2),
                     }],
                 };
             } catch (error) {
+                await logAuditEvent({
+                    action: 'read',
+                    path: auditPath,
+                    status: 'failure',
+                });
+
                 return {
                     content: [{
                         type: 'text' as const,
@@ -51,6 +67,6 @@ export function registerGetFileHashTool(server: McpServer): void {
                     isError: true,
                 };
             }
-        }),
+        },
     );
 }

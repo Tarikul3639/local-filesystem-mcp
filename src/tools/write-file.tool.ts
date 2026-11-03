@@ -4,7 +4,7 @@ import * as z from 'zod/v4';
 
 import { writeFile } from 'node:fs/promises';
 
-import { withAudit } from '../security/audit-log.js';
+import { logAuditEvent } from '../security/audit-log.js';
 import { validatePath } from '../security/path-validator.js';
 import { assertPermission } from '../security/permissions.js';
 import { getErrorMessage } from '../utils/errors.js';
@@ -19,17 +19,22 @@ export function registerWriteFileTool(server: McpServer): void {
                 content: z.string().describe('Content to write into the file'),
             }),
         },
-        async ({ path, content }) => withAudit("write", path, async (setValidatedPath) => {
+        async ({ path, content }) => {
+            let auditPath = path;
+
             try {
-                // Check write permission
                 assertPermission('write');
 
-                // Validate file path
                 const safePath = await validatePath(path);
-                setValidatedPath(safePath);
+                auditPath = safePath;
 
-                // Write content to file
                 await writeFile(safePath, content, 'utf-8');
+
+                await logAuditEvent({
+                    action: 'write',
+                    path: safePath,
+                    status: 'success',
+                });
 
                 return {
                     content: [
@@ -40,6 +45,12 @@ export function registerWriteFileTool(server: McpServer): void {
                     ],
                 };
             } catch (error) {
+                await logAuditEvent({
+                    action: 'write',
+                    path: auditPath,
+                    status: 'failure',
+                });
+
                 return {
                     content: [
                         {
@@ -50,6 +61,6 @@ export function registerWriteFileTool(server: McpServer): void {
                     isError: true,
                 };
             }
-        }),
+        },
     );
 }

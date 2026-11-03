@@ -3,7 +3,7 @@ import type { McpServer } from '@modelcontextprotocol/server';
 import * as z from 'zod/v4';
 import { watch } from 'node:fs/promises';
 
-import { withAudit } from '../security/audit-log.js';
+import { logAuditEvent } from '../security/audit-log.js';
 import { validatePath } from '../security/path-validator.js';
 import { assertPermission } from '../security/permissions.js';
 import { getErrorMessage } from '../utils/errors.js';
@@ -18,12 +18,14 @@ export function registerWatchDirectoryTool(server: McpServer): void {
                 durationSeconds: z.number().int().min(1).max(60).default(10),
             }),
         },
-        async ({ path, durationSeconds }) => withAudit("read", path, async (setValidatedPath) => {
+        async ({ path, durationSeconds }) => {
+            let auditPath = path;
+
             try {
                 assertPermission('read');
 
                 const safePath = await validatePath(path);
-                setValidatedPath(safePath);
+                auditPath = safePath;
 
                 const controller = new AbortController();
 
@@ -59,6 +61,12 @@ export function registerWatchDirectoryTool(server: McpServer): void {
                     clearTimeout(timeout);
                 }
 
+                await logAuditEvent({
+                    action: 'read',
+                    path: safePath,
+                    status: 'success',
+                });
+
                 return {
                     content: [{
                         type: 'text' as const,
@@ -70,6 +78,12 @@ export function registerWatchDirectoryTool(server: McpServer): void {
                     }],
                 };
             } catch (error) {
+                await logAuditEvent({
+                    action: 'read',
+                    path: auditPath,
+                    status: 'failure',
+                });
+
                 return {
                     content: [{
                         type: 'text' as const,
@@ -78,6 +92,6 @@ export function registerWatchDirectoryTool(server: McpServer): void {
                     isError: true,
                 };
             }
-        }),
+        },
     );
 }

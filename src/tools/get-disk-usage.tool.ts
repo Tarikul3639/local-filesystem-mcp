@@ -3,7 +3,7 @@ import type { McpServer } from '@modelcontextprotocol/server';
 import * as z from 'zod/v4';
 import { statfs } from 'node:fs/promises';
 
-import { withAudit } from '../security/audit-log.js';
+import { logAuditEvent } from '../security/audit-log.js';
 import { validatePath } from '../security/path-validator.js';
 import { assertPermission } from '../security/permissions.js';
 import { getErrorMessage } from '../utils/errors.js';
@@ -17,18 +17,27 @@ export function registerGetDiskUsageTool(server: McpServer): void {
                 path: z.string().min(1),
             }),
         },
-        async ({ path }) => withAudit("read", path, async (setValidatedPath) => {
+        async ({ path }) => {
+            let auditPath = path;
+
             try {
                 assertPermission('read');
 
                 const safePath = await validatePath(path);
-                setValidatedPath(safePath);
+                auditPath = safePath;
+
                 const info = await statfs(safePath);
 
                 const total = info.blocks * info.bsize;
                 const free = info.bfree * info.bsize;
                 const available = info.bavail * info.bsize;
                 const used = total - free;
+
+                await logAuditEvent({
+                    action: 'read',
+                    path: safePath,
+                    status: 'success',
+                });
 
                 return {
                     content: [{
@@ -46,6 +55,12 @@ export function registerGetDiskUsageTool(server: McpServer): void {
                     }],
                 };
             } catch (error) {
+                await logAuditEvent({
+                    action: 'read',
+                    path: auditPath,
+                    status: 'failure',
+                });
+
                 return {
                     content: [{
                         type: 'text' as const,
@@ -54,6 +69,6 @@ export function registerGetDiskUsageTool(server: McpServer): void {
                     isError: true,
                 };
             }
-        }),
+        },
     );
 }

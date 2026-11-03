@@ -4,7 +4,7 @@ import * as z from 'zod/v4';
 
 import { rename } from 'node:fs/promises';
 
-import { withAudit } from '../security/audit-log.js';
+import { logAuditEvent } from '../security/audit-log.js';
 import { validatePath } from '../security/path-validator.js';
 import { assertPermission } from '../security/permissions.js';
 import { getErrorMessage } from '../utils/errors.js';
@@ -19,18 +19,24 @@ export function registerMoveFileTool(server: McpServer): void {
                 destination: z.string().min(1).describe('Absolute destination file path'),
             }),
         },
-        async ({ source, destination }) => withAudit("move", `${source} -> ${destination}`, async (setValidatedPath) => {
+        async ({ source, destination }) => {
+            let auditPath = `${source} -> ${destination}`;
+
             try {
-                // Check write permission
                 assertPermission('write');
 
-                // Validate source and destination paths
                 const safeSource = await validatePath(source);
                 const safeDestination = await validatePath(destination);
-                setValidatedPath(`${safeSource} -> ${safeDestination}`);
 
-                // Move file
+                auditPath = `${safeSource} -> ${safeDestination}`;
+
                 await rename(safeSource, safeDestination);
+
+                await logAuditEvent({
+                    action: 'move',
+                    path: auditPath,
+                    status: 'success',
+                });
 
                 return {
                     content: [
@@ -41,6 +47,12 @@ export function registerMoveFileTool(server: McpServer): void {
                     ],
                 };
             } catch (error) {
+                await logAuditEvent({
+                    action: 'move',
+                    path: auditPath,
+                    status: 'failure',
+                });
+
                 return {
                     content: [
                         {
@@ -51,6 +63,6 @@ export function registerMoveFileTool(server: McpServer): void {
                     isError: true,
                 };
             }
-        }),
+        },
     );
 }

@@ -2,6 +2,7 @@ import { McpServer } from '@modelcontextprotocol/server';
 
 import { env } from './config/env.js';
 import { startStdioTransport } from './transports/stdio.js';
+import { startHttpTransport } from './transports/http.js';
 import { registerAllTools } from './tools/register-all-tools.js';
 
 const server = new McpServer({
@@ -18,3 +19,4 @@ console.error(`Allow Delete: ${env.FILESYSTEM_ALLOW_DELETE}`);
 console.error('Registered Tools: 19');
 
 await startStdioTransport(server);
+await startHttpTransport(server);
