@@ -300,25 +300,140 @@ These examples configure **STDIO**. The project also exposes an HTTP MCP endpoin
 
 ### ChatGPT
 
-The project listens for MCP requests locally at `http://127.0.0.1:3002/mcp`. LocalTunnel forwards port `3002` to a public HTTPS hostname. The current endpoints are:
+## OpenAI Tunnel Runtime Setup
 
-| Use | Endpoint |
-| --- | --- |
-| Local MCP endpoint | `http://127.0.0.1:3002/mcp` |
-| LocalTunnel public URL | `https://quiet-chicken-84.loca.lt` |
-| ChatGPT or another remote MCP client | `https://quiet-chicken-84.loca.lt/mcp` |
+This project can be connected to ChatGPT through the OpenAI Tunnel Client Runtime.
 
-Start both the development MCP server and LocalTunnel together with the project's public development script:
+### 1. Requirements
 
-```sh
-pnpm dev:public
+- Ubuntu Linux (64-bit)
+- Node.js
+- pnpm
+- A working Local Filesystem MCP Server
+- OpenAI Tunnel Runtime credentials
+
+### 2. Download OpenAI Tunnel Runtime
+
+Visit the official GitHub repository:
+
+https://github.com/openai/tunnel-client
+
+Open **Releases** and download the appropriate Linux package for your system.
+
+For Ubuntu x86_64, choose the Linux AMD64 runtime package.
+
+Extract the downloaded archive:
+
+```bash
+cd ~/Downloads
+tar -xzf tunnel-client-runtime-cloudflared-v0.0.19-linux-amd64.tar.gz
 ```
 
-The script runs `pnpm dev` and the configured LocalTunnel command together. Leave it running while the remote client is connected. LocalTunnel prints the public HTTPS URL it assigned. The public URL is made by forwarding the local port; append `/mcp` to that hostname to form the MCP endpoint. For example, `https://quiet-chicken-84.loca.lt` becomes `https://quiet-chicken-84.loca.lt/mcp`.
+Enter the extracted directory:
 
-When a new tunnel starts with a different hostname, update the server connection in ChatGPT (or the corresponding remote MCP client settings): replace its existing endpoint with the new printed HTTPS hostname plus `/mcp`. For example, if LocalTunnel prints `https://new-host.loca.lt`, set the client endpoint to `https://new-host.loca.lt/mcp`.
+```bash
+cd tunnel-client-runtime-cloudflared-v0.0.19-linux-amd64
+```
 
-**Security warning:** the LocalTunnel URL is publicly reachable. The project currently requires `MCP_AUTH_TOKEN`, but the HTTP handler does not call the token-checking helper, so requests to `/mcp` are not authenticated. Do not connect this public URL to a real filesystem or enable writes/deletes until server-side authentication is enforced and verified. Keep filesystem roots restricted and read-only during testing.
+### 3. Create a Tunnel
+
+Create a new tunnel through the OpenAI Tunnel setup interface.
+
+Example configuration:
+
+- **Name:** `local-filesystem-mcp`
+- **Description:** Connect ChatGPT to the local Ubuntu filesystem through MCP.
+
+Keep the following credentials available:
+
+- Control Plane API Key
+- Tunnel ID
+
+**Security:** Never publish your API key in GitHub, README files, screenshots, or public messages.
+
+### 4. Configure Environment Variables
+
+Set your credentials in the terminal:
+
+```bash
+export CONTROL_PLANE_API_KEY='YOUR_API_KEY'
+export CONTROL_PLANE_TUNNEL_ID='YOUR_TUNNEL_ID'
+export MCP_SERVER_URL='http://127.0.0.1:3002/mcp'
+```
+
+Replace the placeholders with your actual credentials.
+
+These variables must be available in the terminal where the tunnel runtime runs.
+
+### 5. Start the MCP Server
+
+Open a terminal:
+
+```bash
+cd ~/Desktop/local-filesystem-mcp
+pnpm dev
+```
+
+Keep this terminal running.
+
+The MCP server should be available locally at:
+
+```text
+http://127.0.0.1:3002/mcp
+```
+
+### 6. Start the Tunnel Runtime
+
+Open another terminal and enter the extracted runtime directory:
+
+```bash
+cd ~/Downloads/tunnel-client-runtime-cloudflared-v0.0.19-linux-amd64
+```
+
+Start the runtime:
+
+```bash
+./tunnel-client-runtime-cloudflared run --log.level info
+```
+
+Keep this terminal running too.
+
+### 7. Check Runtime Health
+
+Open another terminal:
+
+```bash
+curl http://127.0.0.1:8080/health
+```
+
+A healthy runtime should return a response containing:
+
+```json
+{
+  "live": true,
+  "ready": true
+}
+```
+
+This confirms runtime health; it does not independently prove that the public tunnel is reachable.
+
+### 8. Connect to ChatGPT
+
+Use the tunnel connection information provided by the OpenAI Tunnel setup flow to connect the MCP server to ChatGPT.
+
+Do not use the old LocalTunnel `*.loca.lt` URL.
+
+### 9. Security Notes
+
+- Never expose the local MCP server directly to the public internet.
+- Keep the Control Plane API Key private.
+- Configure filesystem access using `FILESYSTEM_ROOTS`.
+- Keep delete permission disabled unless you explicitly need it.
+- Do not commit `.env` files or credentials to Git.
+
+### 10. Stop the Services
+
+Press `Ctrl + C` in both terminals to stop the MCP server and tunnel runtime.
 
 ## Security
 
