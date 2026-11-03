@@ -292,7 +292,29 @@ See [VS Code's MCP configuration reference](https://code.visualstudio.com/docs/a
 
 For clients that support launching local STDIO servers with an `mcpServers` configuration, use the Claude Desktop or Cursor entry as a starting point and follow that client's configuration format. The executable is `node`; the argument is the absolute path to `dist/index.js`.
 
-These examples configure **STDIO**. They do not configure HTTP: this project does not currently expose an HTTP transport. ChatGPT connection methods depend on the MCP/connector integration available to your ChatGPT account and its deployment requirements. This project does not promise direct local STDIO support in ChatGPT.
+These examples configure **STDIO**. The project also exposes an HTTP MCP endpoint at `/mcp` for remote clients. ChatGPT cannot connect to a local STDIO process; use the remote endpoint described below. The current HTTP handler does not enforce authentication, so do not expose it for use with a real filesystem until that is fixed.
+
+### ChatGPT
+
+The project listens for MCP requests locally at `http://127.0.0.1:3002/mcp`. LocalTunnel forwards port `3002` to a public HTTPS hostname. The current endpoints are:
+
+| Use | Endpoint |
+| --- | --- |
+| Local MCP endpoint | `http://127.0.0.1:3002/mcp` |
+| LocalTunnel public URL | `https://quiet-chicken-84.loca.lt` |
+| ChatGPT or another remote MCP client | `https://quiet-chicken-84.loca.lt/mcp` |
+
+Start both the development MCP server and LocalTunnel together with the project's public development script:
+
+```sh
+pnpm dev:public
+```
+
+The script runs `pnpm dev` and the configured LocalTunnel command together. Leave it running while the remote client is connected. LocalTunnel prints the public HTTPS URL it assigned. The public URL is made by forwarding the local port; append `/mcp` to that hostname to form the MCP endpoint. For example, `https://quiet-chicken-84.loca.lt` becomes `https://quiet-chicken-84.loca.lt/mcp`.
+
+When a new tunnel starts with a different hostname, update the server connection in ChatGPT (or the corresponding remote MCP client settings): replace its existing endpoint with the new printed HTTPS hostname plus `/mcp`. For example, if LocalTunnel prints `https://new-host.loca.lt`, set the client endpoint to `https://new-host.loca.lt/mcp`.
+
+**Security warning:** the LocalTunnel URL is publicly reachable. The project currently requires `MCP_AUTH_TOKEN`, but the HTTP handler does not call the token-checking helper, so requests to `/mcp` are not authenticated. Do not connect this public URL to a real filesystem or enable writes/deletes until server-side authentication is enforced and verified. Keep filesystem roots restricted and read-only during testing.
 
 ## Security
 
