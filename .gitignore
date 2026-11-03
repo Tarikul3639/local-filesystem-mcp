@@ -1,0 +1,44 @@
+
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+build/
+coverage/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Logs
+logs/*
+!logs/.gitkeep
+*.log
+
+# Testing
+.nyc_output/
+
+# TypeScript
+*.tsbuildinfo
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+
+# Debug
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
