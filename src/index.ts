@@ -16,7 +16,7 @@ console.error('Local Filesystem MCP Server is starting...');
 console.error(`Filesystem Roots: ${env.FILESYSTEM_ROOTS.join(', ')}`);
 console.error(`Read-Only Mode: ${env.FILESYSTEM_READ_ONLY}`);
 console.error(`Allow Delete: ${env.FILESYSTEM_ALLOW_DELETE}`);
-console.error('Registered Tools: 19');
+console.error('Registered Tools: 21');
 
 await startStdioTransport(server);
 await startHttpTransport(server);

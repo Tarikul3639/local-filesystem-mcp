@@ -31,7 +31,7 @@ This is a local TypeScript application. It currently implements the MCP STDIO tr
 
 ## Features
 
-The server registers 19 tools. Paths passed to filesystem tools must be absolute, and are checked against the configured roots.
+The server registers 21 tools. Paths passed to filesystem tools must be absolute, and are checked against the configured roots.
 
 ### File operations
 
@@ -52,7 +52,9 @@ The server registers 19 tools. Paths passed to filesystem tools must be absolute
 | --- | --- | --- |
 | `create_directory` | `path` | Creates one directory. Its parent directory must already exist. |
 | `delete_directory` | `path` | Removes an empty directory. Requires delete permission to be enabled. |
+| `get_current_directory` | None | Returns the server process's current working directory only if it is within a configured filesystem root. |
 | `list_files` | `path` | Lists the immediate entries in a directory, including each entry's name and type. |
+| `list_allowed_roots` | None | Lists the canonical filesystem roots configured for this server. Use one of these paths as the starting point for directory listing. |
 | `get_directory_tree` | `path`; optional `maxDepth` | Returns a directory tree. `maxDepth` defaults to 5 and accepts values from 1 to 10. |
 | `get_directory_size` | `path` | Recursively totals file sizes in a directory. Symlinks are skipped. |
 
@@ -110,10 +112,12 @@ local-filesystem-mcp/
 │   │   ├── edit-file.tool.ts
 │   │   ├── get-directory-size.tool.ts
 │   │   ├── get-directory-tree.tool.ts
+│   │   ├── get-current-directory.tool.ts
 │   │   ├── get-disk-usage.tool.ts
 │   │   ├── get-file-hash.tool.ts
 │   │   ├── get-file-info.tool.ts
 │   │   ├── get-file-permissions.tool.ts
+│   │   ├── list-allowed-roots.tool.ts
 │   │   ├── list-files.tool.ts
 │   │   ├── move-file.tool.ts
 │   │   ├── read-file.tool.ts
@@ -143,7 +147,7 @@ local-filesystem-mcp/
 └── README.md
 ```
 
-`config/` parses environment settings and resolves allowed roots. `security/` contains path validation, permission checks, the audit helper, and an empty authentication module. `tools/` contains the 19 MCP tools and their central registrar. `transports/` contains the active STDIO transport and an HTTP file whose code is commented out. `utils/` contains shared error formatting. `index.ts` creates the MCP server, registers tools, and starts STDIO. `tests/` contains the Node test-runner suites. `src/security/authentication.ts` does not currently implement authentication.
+`config/` parses environment settings and resolves allowed roots. `security/` contains path validation, permission checks, and the audit helper. `tools/` contains the 21 MCP tools and their central registrar. `transports/` contains the STDIO and HTTP transports. `utils/` contains shared error formatting. `index.ts` creates the MCP server, registers tools, and starts both transports. `tests/` contains the Node test-runner suites. The HTTP transport currently does not enforce its token authentication helper.
 
 ## Prerequisites
 
@@ -319,6 +323,8 @@ When a new tunnel starts with a different hostname, update the server connection
 ## Security
 
 - **Allowed roots:** `FILESYSTEM_ROOTS` limits operations to configured directories. Roots must be absolute and resolvable on the host.
+- **Allowed-root discovery:** `list_allowed_roots` returns the canonical absolute paths of configured roots. This exposes path names to connected clients; the current HTTP endpoint does not enforce authentication, so do not expose it through LocalTunnel with sensitive roots configured.
+- **Current-directory lookup:** `get_current_directory` returns the process working directory only when path validation confirms it is within an allowed root.
 - **Path validation:** inputs must be non-empty absolute paths. The validator canonicalizes existing paths and checks that the resulting path stays within an allowed root. For a new target, it canonicalizes the existing parent directory before checking the target.
 - **Traversal and symlinks:** canonical path checks prevent `..` traversal and reject resolved paths outside the roots. Existing symlinks are resolved before the root check. Directory tree and size traversal skip symlinks according to their implementations. This does not remove all filesystem race conditions between validation and later operations.
 - **Read-only mode:** `FILESYSTEM_READ_ONLY=true` blocks operations that use the write permission check. It defaults to `false`.

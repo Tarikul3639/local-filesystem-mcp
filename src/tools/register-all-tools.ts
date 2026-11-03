@@ -3,6 +3,8 @@ import type { McpServer } from '@modelcontextprotocol/server';
 
 // Core tools
 import { registerListFilesTool } from './list-files.tool.js';
+import { registerListAllowedRootsTool } from './list-allowed-roots.tool.js';
+import { registerGetCurrentDirectoryTool } from './get-current-directory.tool.js';
 import { registerReadFileTool } from './read-file.tool.js';
 import { registerWriteFileTool } from './write-file.tool.js';
 import { registerDeleteFileTool } from './delete-file.tool.js';
@@ -26,6 +28,8 @@ import { registerWatchDirectoryTool } from './watch-directory.tool.js';
 
 export function registerAllTools(server: McpServer): void {
   // Register Core Tools
+  registerListAllowedRootsTool(server);
+  registerGetCurrentDirectoryTool(server);
   registerListFilesTool(server);
   registerReadFileTool(server);
   registerWriteFileTool(server);
