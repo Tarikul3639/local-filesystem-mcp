@@ -13,7 +13,9 @@ export type AuditAction =
     | "create_directory"
     | "delete_directory"
     | "search"
-    | "set_permissions";
+    | "set_permissions"
+    | "get_permissions"
+    | "execute"
 
 export type AuditStatus = "success" | "failure" | "denied";
 

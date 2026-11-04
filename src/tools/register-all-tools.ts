@@ -25,6 +25,7 @@ import { registerGetFilePermissionsTool } from './get-file-permissions.tool.js';
 import { registerSetFilePermissionsTool } from './set-file-permissions.tool.js';
 import { registerGetDiskUsageTool } from './get-disk-usage.tool.js';
 import { registerWatchDirectoryTool } from './watch-directory.tool.js';
+import { registerRunCommandTool } from './run-command.tool.js';
 
 export function registerAllTools(server: McpServer): void {
   // Register Core Tools
@@ -51,4 +52,5 @@ export function registerAllTools(server: McpServer): void {
   registerSetFilePermissionsTool(server);
   registerGetDiskUsageTool(server);
   registerWatchDirectoryTool(server);
+  registerRunCommandTool(server);
 }

@@ -31,7 +31,7 @@ This is a local TypeScript application. It currently implements the MCP STDIO tr
 
 ## Features
 
-The server registers 21 tools. Paths passed to filesystem tools must be absolute, and are checked against the configured roots.
+The server registers 22 tools. Paths passed to filesystem tools must be absolute, and are checked against the configured roots.
 
 ### File operations
 
@@ -66,6 +66,7 @@ The server registers 21 tools. Paths passed to filesystem tools must be absolute
 | `get_file_info` | `path` | Returns filesystem metadata including type, size, timestamps, and file/directory flags. |
 | `get_file_hash` | `path` | Computes a SHA-256 hash for a file. |
 | `get_disk_usage` | `path` | Reports filesystem total, used, free, and available space and the percentage used. |
+| `run_command` | `command`; optional `args`, `confirmed` | Runs a command from a fixed allowlist in the MCP project directory. Shell interpretation is disabled; unsupported commands and arguments are rejected. Git staging and commit commands require `confirmed: true`. |
 
 ### Permissions and monitoring
 
@@ -173,7 +174,7 @@ Create a `.env` file in the project directory and configure the allowed roots as
 pnpm build
 ```
 
-The package's current TypeScript configuration has known issues described in [Troubleshooting](#troubleshooting). A successful build should not be assumed until those are resolved.
+The TypeScript build compiles `src/`; tests run separately through `pnpm test`.
 
 ## Environment configuration
 
@@ -522,7 +523,7 @@ Import the registrar into `register-all-tools.ts` and call it from `registerAllT
 | --- | --- |
 | Node.js version mismatch | Run `node --version`; install Node.js 20 or newer. |
 | Dependency installation fails | Enable Corepack and activate pnpm 12.16.1, then retry `pnpm install`. Check registry/network access and the pnpm error output. |
-| TypeScript build errors | Run `pnpm build` and inspect the first compiler errors. In the current checkout, tools import `withAudit` from `src/security/audit-log.ts`, but that module exports only `logAuditEvent`; some tests also expect the missing API. The configured `rootDir` is `src` while `include` also includes `tests`, which can produce root directory errors. These are existing source/configuration issues, not README setup steps. |
+| TypeScript build errors | Run `pnpm build` and inspect the first compiler errors. The build compiles `src/`; use `pnpm test` to run tests separately. |
 | Invalid filesystem root | Ensure every `FILESYSTEM_ROOTS` entry is absolute, exists, and is separated with the host platform's path delimiter. |
 | Permission denied | Check that the requested canonical path is within an allowed root. For writes, check `FILESYSTEM_READ_ONLY`; for delete operations, check `FILESYSTEM_ALLOW_DELETE`. Also check operating-system permissions. |
 | MCP Inspector cannot connect | Confirm the build succeeded, use the absolute `dist/index.js` path, run the Inspector command from a shell with Node available, and check stderr for startup errors. |
