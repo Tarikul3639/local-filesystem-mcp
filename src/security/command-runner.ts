@@ -1,6 +1,8 @@
 import { spawn } from 'node:child_process';
+import { stat } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { validatePath } from './path-validator.js';
 import { validateCommand } from './command-validator.js';
 
 export interface CommandResult {
@@ -9,19 +11,29 @@ export interface CommandResult {
   exitCode: number;
 }
 
-// Resolve from this module so command execution stays in the MCP project even
-// when an AI client launches the server with a different working directory.
+// Use this MCP project directory when no working directory is supplied.
 const PROJECT_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 
-export function runCommand(
+export async function runCommand(
   command: string,
   args: string[] = [],
+  workingDirectory?: string,
 ): Promise<CommandResult> {
   const definition = validateCommand(command, args);
 
+  // Custom directories must exist and remain inside configured filesystem roots.
+  let cwd = PROJECT_ROOT;
+  if (workingDirectory !== undefined) {
+    cwd = await validatePath(workingDirectory);
+    const directoryInfo = await stat(cwd);
+    if (!directoryInfo.isDirectory()) {
+      throw new Error('Working directory must be an existing directory.');
+    }
+  }
+
   return new Promise((resolvePromise, reject) => {
     const child = spawn(definition.executable, [...args], {
-      cwd: PROJECT_ROOT,
+      cwd,
       shell: false,
       windowsHide: true,
       stdio: ['ignore', 'pipe', 'pipe'],
@@ -35,7 +47,6 @@ export function runCommand(
 
     const appendOutput = (target: 'stdout' | 'stderr', chunk: Buffer) => {
       outputSize += chunk.length;
-
       const remaining = definition.maxOutput - (
         Buffer.byteLength(stdout) + Buffer.byteLength(stderr)
       );
@@ -72,17 +83,12 @@ export function runCommand(
         reject(new Error('Command timed out.'));
         return;
       }
-
       if (outputLimitReached) {
         reject(new Error('Command output limit exceeded.'));
         return;
       }
 
-      resolvePromise({
-        stdout,
-        stderr,
-        exitCode: code ?? 1,
-      });
+      resolvePromise({ stdout, stderr, exitCode: code ?? 1 });
     });
   });
 }

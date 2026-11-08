@@ -10,15 +10,20 @@ export function registerRunCommandTool(server: McpServer): void {
     server.registerTool(
         'run_command',
         {
-            description: 'Run commands from the project command allowlist',
+            description: 'Run an approved command inside an allowed filesystem directory',
             inputSchema: {
                 command: z.enum(ALLOWED_COMMAND_NAMES),
                 args: z.array(z.string()).default([]),
+                workingDirectory: z.string().optional(),
                 confirmed: z.boolean().default(false),
             },
         },
-        async ({ command, args, confirmed }) => {
-            const auditPath = [command, ...args].join(' ');
+        async ({ command, args, workingDirectory, confirmed }) => {
+            const auditPath = [
+                workingDirectory ?? '(default directory)',
+                command,
+                ...args,
+            ].join(' ');
 
             try {
                 assertPermission('execute');
@@ -37,7 +42,7 @@ export function registerRunCommandTool(server: McpServer): void {
                     };
                 }
 
-                const result = await runCommand(command, args);
+                const result = await runCommand(command, args, workingDirectory);
 
                 await logAuditEvent({
                     action: 'execute',
