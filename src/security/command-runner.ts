@@ -1,9 +1,9 @@
-import { spawn } from 'node:child_process';
-import { stat } from 'node:fs/promises';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { validatePath } from './path-validator.js';
-import { validateCommand } from './command-validator.js';
+import { spawn } from "node:child_process";
+import { stat } from "node:fs/promises";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { validatePath } from "./path-validator.js";
+import { validateCommand } from "./command-validator.js";
 
 export interface CommandResult {
   stdout: string;
@@ -12,7 +12,7 @@ export interface CommandResult {
 }
 
 // Use this MCP project directory when no working directory is supplied.
-const PROJECT_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
+const PROJECT_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 
 export async function runCommand(
   command: string,
@@ -27,7 +27,7 @@ export async function runCommand(
     cwd = await validatePath(workingDirectory);
     const directoryInfo = await stat(cwd);
     if (!directoryInfo.isDirectory()) {
-      throw new Error('Working directory must be an existing directory.');
+      throw new Error("Working directory must be an existing directory.");
     }
   }
 
@@ -36,24 +36,24 @@ export async function runCommand(
       cwd,
       shell: false,
       windowsHide: true,
-      stdio: ['ignore', 'pipe', 'pipe'],
+      stdio: ["ignore", "pipe", "pipe"],
     });
 
-    let stdout = '';
-    let stderr = '';
+    let stdout = "";
+    let stderr = "";
     let outputSize = 0;
     let timedOut = false;
     let outputLimitReached = false;
 
-    const appendOutput = (target: 'stdout' | 'stderr', chunk: Buffer) => {
+    const appendOutput = (target: "stdout" | "stderr", chunk: Buffer) => {
       outputSize += chunk.length;
-      const remaining = definition.maxOutput - (
-        Buffer.byteLength(stdout) + Buffer.byteLength(stderr)
-      );
+      const remaining =
+        definition.maxOutput -
+        (Buffer.byteLength(stdout) + Buffer.byteLength(stderr));
 
       if (remaining > 0) {
-        const value = chunk.toString('utf8').slice(0, remaining);
-        if (target === 'stdout') stdout += value;
+        const value = chunk.toString("utf8").slice(0, remaining);
+        if (target === "stdout") stdout += value;
         else stderr += value;
       }
 
@@ -68,23 +68,23 @@ export async function runCommand(
       child.kill();
     }, definition.timeout);
 
-    child.stdout.on('data', (chunk: Buffer) => appendOutput('stdout', chunk));
-    child.stderr.on('data', (chunk: Buffer) => appendOutput('stderr', chunk));
+    child.stdout.on("data", (chunk: Buffer) => appendOutput("stdout", chunk));
+    child.stderr.on("data", (chunk: Buffer) => appendOutput("stderr", chunk));
 
-    child.on('error', (error) => {
+    child.on("error", (error) => {
       clearTimeout(timeout);
       reject(error);
     });
 
-    child.on('close', (code) => {
+    child.on("close", (code) => {
       clearTimeout(timeout);
 
       if (timedOut) {
-        reject(new Error('Command timed out.'));
+        reject(new Error("Command timed out."));
         return;
       }
       if (outputLimitReached) {
-        reject(new Error('Command output limit exceeded.'));
+        reject(new Error("Command output limit exceeded."));
         return;
       }
 

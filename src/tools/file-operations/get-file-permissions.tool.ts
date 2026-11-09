@@ -1,21 +1,19 @@
-
 import type { McpServer } from "@modelcontextprotocol/server";
 import * as z from "zod/v4";
-
 import { stat } from "node:fs/promises";
 
-import { logAuditEvent } from "../security/audit-log.js";
-import { validatePath } from "../security/path-validator.js";
-import { assertPermission } from "../security/permissions.js";
-import { getErrorMessage } from "../utils/errors.js";
+import { logAuditEvent } from "../../security/audit-log.js";
+import { validatePath } from "../../security/path-validator.js";
+import { assertPermission } from "../../security/permissions.js";
+import { getErrorMessage } from "../../utils/errors.js";
 
-export function registerGetFileInfoTool(server: McpServer): void {
+export function registerGetFilePermissionsTool(server: McpServer): void {
   server.registerTool(
-    "get_file_info",
+    "get_file_permissions",
     {
-      description: "Get information about a file or directory",
+      description: "Get file permissions",
       inputSchema: z.object({
-        path: z.string().min(1).describe("Absolute file or directory path"),
+        path: z.string().min(1),
       }),
     },
     async ({ path }) => {
@@ -28,18 +26,26 @@ export function registerGetFileInfoTool(server: McpServer): void {
         auditPath = safePath;
 
         const info = await stat(safePath);
+        const mode = info.mode & 0o777;
 
         const result = {
           path: safePath,
-          name: safePath.split("/").pop(),
-          type: info.isDirectory() ? "directory" : "file",
-          size: info.size,
-          sizeInKB: Number((info.size / 1024).toFixed(2)),
-          createdAt: info.birthtime.toISOString(),
-          modifiedAt: info.mtime.toISOString(),
-          accessedAt: info.atime.toISOString(),
-          isFile: info.isFile(),
-          isDirectory: info.isDirectory(),
+          mode: mode.toString(8).padStart(3, "0"),
+          owner: {
+            read: Boolean(mode & 0o400),
+            write: Boolean(mode & 0o200),
+            execute: Boolean(mode & 0o100),
+          },
+          group: {
+            read: Boolean(mode & 0o040),
+            write: Boolean(mode & 0o020),
+            execute: Boolean(mode & 0o010),
+          },
+          others: {
+            read: Boolean(mode & 0o004),
+            write: Boolean(mode & 0o002),
+            execute: Boolean(mode & 0o001),
+          },
         };
 
         await logAuditEvent({

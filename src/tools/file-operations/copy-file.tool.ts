@@ -1,13 +1,12 @@
-
 import type { McpServer } from "@modelcontextprotocol/server";
 import * as z from "zod/v4";
 
 import { copyFile } from "node:fs/promises";
 
-import { logAuditEvent } from "../security/audit-log.js";
-import { validatePath } from "../security/path-validator.js";
-import { assertPermission } from "../security/permissions.js";
-import { getErrorMessage } from "../utils/errors.js";
+import { logAuditEvent } from "../../security/audit-log.js";
+import { validatePath } from "../../security/path-validator.js";
+import { assertPermission } from "../../security/permissions.js";
+import { getErrorMessage } from "../../utils/errors.js";
 
 export function registerCopyFileTool(server: McpServer): void {
   server.registerTool(

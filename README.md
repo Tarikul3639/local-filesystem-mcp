@@ -35,46 +35,46 @@ The server registers 22 tools. Paths passed to filesystem tools must be absolute
 
 ### File operations
 
-| Tool | Required inputs | Behavior |
-| --- | --- | --- |
-| `read_file` | `path` | Reads a text file as UTF-8. |
-| `read_multiple_files` | `paths` | Reads 1–20 files and returns an individual result for each path. A failed item is represented in that item's result. |
-| `write_file` | `path`, `content` | Creates a file or overwrites its contents with UTF-8 text. |
-| `append_file` | `path`, `content` | Appends UTF-8 text to a file. |
-| `edit_file` | `path`, `oldText`, `newText` | Replaces the first occurrence of `oldText` with `newText`. `oldText` must not be empty. |
-| `delete_file` | `path` | Removes a file. Requires delete permission to be enabled. |
-| `copy_file` | `source`, `destination` | Copies a file to the destination path. |
-| `move_file` | `source`, `destination` | Moves or renames a file. |
+| Tool                  | Required inputs              | Behavior                                                                                                             |
+| --------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `read_file`           | `path`                       | Reads a text file as UTF-8.                                                                                          |
+| `read_multiple_files` | `paths`                      | Reads 1–20 files and returns an individual result for each path. A failed item is represented in that item's result. |
+| `write_file`          | `path`, `content`            | Creates a file or overwrites its contents with UTF-8 text.                                                           |
+| `append_file`         | `path`, `content`            | Appends UTF-8 text to a file.                                                                                        |
+| `edit_file`           | `path`, `oldText`, `newText` | Replaces the first occurrence of `oldText` with `newText`. `oldText` must not be empty.                              |
+| `delete_file`         | `path`                       | Removes a file. Requires delete permission to be enabled.                                                            |
+| `copy_file`           | `source`, `destination`      | Copies a file to the destination path.                                                                               |
+| `move_file`           | `source`, `destination`      | Moves or renames a file.                                                                                             |
 
 ### Directory operations
 
-| Tool | Required inputs | Behavior |
-| --- | --- | --- |
-| `create_directory` | `path` | Creates one directory. Its parent directory must already exist. |
-| `delete_directory` | `path` | Removes an empty directory. Requires delete permission to be enabled. |
-| `get_current_directory` | None | Returns the server process's current working directory only if it is within a configured filesystem root. |
-| `list_files` | `path` | Lists the immediate entries in a directory, including each entry's name and type. |
-| `list_allowed_roots` | None | Lists the canonical filesystem roots configured for this server. Use one of these paths as the starting point for directory listing. |
-| `get_directory_tree` | `path`; optional `maxDepth` | Returns a directory tree. `maxDepth` defaults to 5 and accepts values from 1 to 10. |
-| `get_directory_size` | `path` | Recursively totals file sizes in a directory. Symlinks are skipped. |
+| Tool                    | Required inputs             | Behavior                                                                                                                             |
+| ----------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `create_directory`      | `path`                      | Creates one directory. Its parent directory must already exist.                                                                      |
+| `delete_directory`      | `path`                      | Removes an empty directory. Requires delete permission to be enabled.                                                                |
+| `get_current_directory` | None                        | Returns the server process's current working directory only if it is within a configured filesystem root.                            |
+| `list_files`            | `path`                      | Lists the immediate entries in a directory, including each entry's name and type.                                                    |
+| `list_allowed_roots`    | None                        | Lists the canonical filesystem roots configured for this server. Use one of these paths as the starting point for directory listing. |
+| `get_directory_tree`    | `path`; optional `maxDepth` | Returns a directory tree. `maxDepth` defaults to 5 and accepts values from 1 to 10.                                                  |
+| `get_directory_size`    | `path`                      | Recursively totals file sizes in a directory. Symlinks are skipped.                                                                  |
 
 ### Search and inspection
 
-| Tool | Required inputs | Behavior |
-| --- | --- | --- |
-| `search_files` | `path`, `query` | Recursively searches entry names for a case-insensitive substring. It does not search file contents. |
-| `get_file_info` | `path` | Returns filesystem metadata including type, size, timestamps, and file/directory flags. |
-| `get_file_hash` | `path` | Computes a SHA-256 hash for a file. |
-| `get_disk_usage` | `path` | Reports filesystem total, used, free, and available space and the percentage used. |
-| `run_command` | `command`; optional `args`, `confirmed` | Runs a command from a fixed allowlist in the MCP project directory. Shell interpretation is disabled; unsupported commands and arguments are rejected. Git staging and commit commands require `confirmed: true`. |
+| Tool             | Required inputs                         | Behavior                                                                                                                                                                                                          |
+| ---------------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `search_files`   | `path`, `query`                         | Recursively searches entry names for a case-insensitive substring. It does not search file contents.                                                                                                              |
+| `get_file_info`  | `path`                                  | Returns filesystem metadata including type, size, timestamps, and file/directory flags.                                                                                                                           |
+| `get_file_hash`  | `path`                                  | Computes a SHA-256 hash for a file.                                                                                                                                                                               |
+| `get_disk_usage` | `path`                                  | Reports filesystem total, used, free, and available space and the percentage used.                                                                                                                                |
+| `run_command`    | `command`; optional `args`, `confirmed` | Runs a command from a fixed allowlist in the MCP project directory. Shell interpretation is disabled; unsupported commands and arguments are rejected. Git staging and commit commands require `confirmed: true`. |
 
 ### Permissions and monitoring
 
-| Tool | Required inputs | Behavior |
-| --- | --- | --- |
-| `get_file_permissions` | `path` | Reports permission bits and read, write, and execute access for owner, group, and others. |
-| `set_file_permissions` | `path`, `mode` | Changes mode bits. `mode` is an integer from 0 through `0o777` (for example, decimal `420` is `0o644`). |
-| `watch_directory` | `path`; optional `durationSeconds` | Watches directory changes and returns event types and filenames. Duration defaults to 10 seconds and accepts values from 1 to 60. |
+| Tool                   | Required inputs                    | Behavior                                                                                                                          |
+| ---------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `get_file_permissions` | `path`                             | Reports permission bits and read, write, and execute access for owner, group, and others.                                         |
+| `set_file_permissions` | `path`, `mode`                     | Changes mode bits. `mode` is an integer from 0 through `0o777` (for example, decimal `420` is `0o644`).                           |
+| `watch_directory`      | `path`; optional `durationSeconds` | Watches directory changes and returns event types and filenames. Duration defaults to 10 seconds and accepts values from 1 to 60. |
 
 **Destructive operations:** `write_file` can overwrite an existing file; `delete_file` and `delete_directory` remove filesystem entries; `move_file` changes their location; and `set_file_permissions` changes access rights. Use read-only mode and keep delete permission disabled unless those operations are needed.
 
@@ -82,13 +82,13 @@ The server registers 22 tools. Paths passed to filesystem tools must be absolute
 
 Versions below come from the project manifest and lockfile. Dependency ranges use the versions declared by the project.
 
-| Technology | Version |
-| --- | --- |
-| Node.js | 20 or newer (required by the MCP SDK dependency) |
-| TypeScript | `^7.0.2` |
-| pnpm | `12.16.1` |
-| `@modelcontextprotocol/server` (MCP SDK v2) | `^2.4.0` |
-| Zod | `^4.6.7` |
+| Technology                                  | Version                                          |
+| ------------------------------------------- | ------------------------------------------------ |
+| Node.js                                     | 20 or newer (required by the MCP SDK dependency) |
+| TypeScript                                  | `^7.0.2`                                         |
+| pnpm                                        | `12.16.1`                                        |
+| `@modelcontextprotocol/server` (MCP SDK v2) | `^2.4.0`                                         |
+| Zod                                         | `^4.6.7`                                         |
 
 The project also uses `dotenv` (`^18.0.9`) to load `.env`, and `tsx` (`^4.23.15`) for development and tests.
 
@@ -180,11 +180,11 @@ The TypeScript build compiles `src/`; tests run separately through `pnpm test`.
 
 `src/config/env.ts` loads these variables through `dotenv` and validates their values:
 
-| Variable | Default | Meaning |
-| --- | --- | --- |
-| `FILESYSTEM_ROOTS` | The current user's home directory | One or more absolute filesystem roots the server may access. Roots are separated using the operating system's path delimiter (typically `:` on POSIX and `;` on Windows). Each configured root must exist. |
-| `FILESYSTEM_READ_ONLY` | `false` | When `true`, operations checked as writes are denied. Reads remain available. |
-| `FILESYSTEM_ALLOW_DELETE` | `false` | When `true`, file and directory deletion permission checks are allowed. |
+| Variable                  | Default                           | Meaning                                                                                                                                                                                                    |
+| ------------------------- | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FILESYSTEM_ROOTS`        | The current user's home directory | One or more absolute filesystem roots the server may access. Roots are separated using the operating system's path delimiter (typically `:` on POSIX and `;` on Windows). Each configured root must exist. |
+| `FILESYSTEM_READ_ONLY`    | `false`                           | When `true`, operations checked as writes are denied. Reads remain available.                                                                                                                              |
+| `FILESYSTEM_ALLOW_DELETE` | `false`                           | When `true`, file and directory deletion permission checks are allowed.                                                                                                                                    |
 
 Complete recommended `.env.example` contents for a POSIX system (replace the example paths with directories that exist on your machine):
 
@@ -202,11 +202,11 @@ The checked-in `.env.example` currently does **not** match `src/config/env.ts`: 
 
 The available package scripts are:
 
-| Purpose | Command |
-| --- | --- |
-| Development with file watching | `pnpm dev` |
+| Purpose                         | Command      |
+| ------------------------------- | ------------ |
+| Development with file watching  | `pnpm dev`   |
 | Compile TypeScript into `dist/` | `pnpm build` |
-| Run the built server | `pnpm start` |
+| Run the built server            | `pnpm start` |
 
 The development command runs `tsx watch src/index.ts`. Production mode runs `node dist/index.js` and therefore requires a successful build first.
 
@@ -519,16 +519,16 @@ Import the registrar into `register-all-tools.ts` and call it from `registerAllT
 
 ## Troubleshooting
 
-| Problem | Checks and next steps |
-| --- | --- |
-| Node.js version mismatch | Run `node --version`; install Node.js 20 or newer. |
-| Dependency installation fails | Enable Corepack and activate pnpm 12.16.1, then retry `pnpm install`. Check registry/network access and the pnpm error output. |
-| TypeScript build errors | Run `pnpm build` and inspect the first compiler errors. The build compiles `src/`; use `pnpm test` to run tests separately. |
-| Invalid filesystem root | Ensure every `FILESYSTEM_ROOTS` entry is absolute, exists, and is separated with the host platform's path delimiter. |
-| Permission denied | Check that the requested canonical path is within an allowed root. For writes, check `FILESYSTEM_READ_ONLY`; for delete operations, check `FILESYSTEM_ALLOW_DELETE`. Also check operating-system permissions. |
-| MCP Inspector cannot connect | Confirm the build succeeded, use the absolute `dist/index.js` path, run the Inspector command from a shell with Node available, and check stderr for startup errors. |
+| Problem                           | Checks and next steps                                                                                                                                                                                           |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Node.js version mismatch          | Run `node --version`; install Node.js 20 or newer.                                                                                                                                                              |
+| Dependency installation fails     | Enable Corepack and activate pnpm 12.16.1, then retry `pnpm install`. Check registry/network access and the pnpm error output.                                                                                  |
+| TypeScript build errors           | Run `pnpm build` and inspect the first compiler errors. The build compiles `src/`; use `pnpm test` to run tests separately.                                                                                     |
+| Invalid filesystem root           | Ensure every `FILESYSTEM_ROOTS` entry is absolute, exists, and is separated with the host platform's path delimiter.                                                                                            |
+| Permission denied                 | Check that the requested canonical path is within an allowed root. For writes, check `FILESYSTEM_READ_ONLY`; for delete operations, check `FILESYSTEM_ALLOW_DELETE`. Also check operating-system permissions.   |
+| MCP Inspector cannot connect      | Confirm the build succeeded, use the absolute `dist/index.js` path, run the Inspector command from a shell with Node available, and check stderr for startup errors.                                            |
 | Client does not launch the server | Confirm the client's JSON schema, absolute script path, `node` availability in its process environment, and configured environment variables. Restart or reload the client after editing its MCP configuration. |
-| No HTTP connection is available | Only STDIO is implemented. The HTTP transport file is commented out. |
+| No HTTP connection is available   | Only STDIO is implemented. The HTTP transport file is commented out.                                                                                                                                            |
 
 ## Contributing
 

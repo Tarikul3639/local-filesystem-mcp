@@ -1,56 +1,60 @@
-
-import type { McpServer } from '@modelcontextprotocol/server';
-
-// Core tools
-import { registerListFilesTool } from './list-files.tool.js';
-import { registerListAllowedRootsTool } from './list-allowed-roots.tool.js';
-import { registerGetCurrentDirectoryTool } from './get-current-directory.tool.js';
-import { registerReadFileTool } from './read-file.tool.js';
-import { registerWriteFileTool } from './write-file.tool.js';
-import { registerDeleteFileTool } from './delete-file.tool.js';
-import { registerCopyFileTool } from './copy-file.tool.js';
-import { registerMoveFileTool } from './move-file.tool.js';
-import { registerSearchFilesTool } from './search-files.tool.js';
-import { registerGetFileInfoTool } from './get-file-info.tool.js';
-import { registerDirectoryTool } from './directory.tool.js';
-
-// Advanced tools
-import { registerAppendFileTool } from './append-file.tool.js';
-import { registerEditFileTool } from './edit-file.tool.js';
-import { registerReadMultipleFilesTool } from './read-multiple-files.tool.js';
-import { registerGetDirectoryTreeTool } from './get-directory-tree.tool.js';
-import { registerGetDirectorySizeTool } from './get-directory-size.tool.js';
-import { registerGetFileHashTool } from './get-file-hash.tool.js';
-import { registerGetFilePermissionsTool } from './get-file-permissions.tool.js';
-import { registerSetFilePermissionsTool } from './set-file-permissions.tool.js';
-import { registerGetDiskUsageTool } from './get-disk-usage.tool.js';
-import { registerWatchDirectoryTool } from './watch-directory.tool.js';
-import { registerRunCommandTool } from './run-command.tool.js';
+import type { McpServer } from "@modelcontextprotocol/server";
+import { registerAppendFileTool } from "./file-operations/append-file.tool.js";
+import { registerCopyFileTool } from "./file-operations/copy-file.tool.js";
+import { registerEditFileTool } from "./file-operations/edit-file.tool.js";
+import { registerGetFileHashTool } from "./file-operations/get-file-hash.tool.js";
+import { registerGetFileInfoTool } from "./file-operations/get-file-info.tool.js";
+import { registerGetFilePermissionsTool } from "./file-operations/get-file-permissions.tool.js";
+import { registerListFilesTool } from "./file-operations/list-files.tool.js";
+import { registerMoveFileTool } from "./file-operations/move-file.tool.js";
+import { registerReadFileTool } from "./file-operations/read-file.tool.js";
+import { registerReadMultipleFilesTool } from "./file-operations/read-multiple-files.tool.js";
+import { registerSearchFilesTool } from "./file-operations/search-files.tool.js";
+import { registerSetFilePermissionsTool } from "./file-operations/set-file-permissions.tool.js";
+import { registerTrustFileTool } from "./file-operations/trust-file.tool.js";
+import { registerUntrustFileTool } from "./file-operations/untrust-file.tool.js";
+import { registerWriteFileTool } from "./file-operations/write-file.tool.js";
+import { registerCreateDirectoryTool } from "./directory-operations/create-directory.tool.js";
+import { registerGetDirectorySizeTool } from "./directory-operations/get-directory-size.tool.js";
+import { registerGetDirectoryTreeTool } from "./directory-operations/get-directory-tree.tool.js";
+import { registerMoveDirectoryTool } from "./directory-operations/move-directory.tool.js";
+import { registerTrustDirectoryTool } from "./directory-operations/trust-directory.tool.js";
+import { registerUntrustDirectoryTool } from "./directory-operations/untrust-directory.tool.js";
+import { registerWatchDirectoryTool } from "./directory-operations/watch-directory.tool.js";
+import { registerGetCurrentDirectoryTool } from "./system/get-current-directory.tool.js";
+import { registerGetDiskUsageTool } from "./system/get-disk-usage.tool.js";
+import { registerListAllowedRootsTool } from "./system/list-allowed-roots.tool.js";
+import { registerRunCommandTool } from "./system/run-command.tool.js";
+import { registerScreenshotTools } from "./system/screenshot.tool.js";
+import { registerBrowserTools } from "./browser/browser.tool.js";
 
 export function registerAllTools(server: McpServer): void {
-  // Register Core Tools
-  registerListAllowedRootsTool(server);
-  registerGetCurrentDirectoryTool(server);
-  registerListFilesTool(server);
-  registerReadFileTool(server);
-  registerWriteFileTool(server);
-  registerDeleteFileTool(server);
-  registerCopyFileTool(server);
-  registerMoveFileTool(server);
-  registerSearchFilesTool(server);
-  registerGetFileInfoTool(server);
-  registerDirectoryTool(server);
-
-  // Register Advanced Tools
   registerAppendFileTool(server);
+  registerCopyFileTool(server);
   registerEditFileTool(server);
-  registerReadMultipleFilesTool(server);
-  registerGetDirectoryTreeTool(server);
-  registerGetDirectorySizeTool(server);
   registerGetFileHashTool(server);
+  registerGetFileInfoTool(server);
   registerGetFilePermissionsTool(server);
+  registerListFilesTool(server);
+  registerMoveFileTool(server);
+  registerReadFileTool(server);
+  registerReadMultipleFilesTool(server);
+  registerSearchFilesTool(server);
   registerSetFilePermissionsTool(server);
-  registerGetDiskUsageTool(server);
+  registerTrustFileTool(server);
+  registerUntrustFileTool(server);
+  registerWriteFileTool(server);
+  registerCreateDirectoryTool(server);
+  registerGetDirectorySizeTool(server);
+  registerGetDirectoryTreeTool(server);
+  registerMoveDirectoryTool(server);
+  registerTrustDirectoryTool(server);
+  registerUntrustDirectoryTool(server);
   registerWatchDirectoryTool(server);
+  registerGetCurrentDirectoryTool(server);
+  registerGetDiskUsageTool(server);
+  registerListAllowedRootsTool(server);
   registerRunCommandTool(server);
+  registerScreenshotTools(server);
+  registerBrowserTools(server);
 }
