@@ -6,51 +6,55 @@ Filesystem operations are restricted to configured allowed roots. The server inc
 
 ## Features
 
-The server registers **37 MCP tools** across five areas.
+The server registers **41 MCP tools** across five areas.
 
 ### File operations
 
-| Tool | Inputs | Description |
-| --- | --- | --- |
-| `read_file` | `path` | Read a UTF-8 text file. |
-| `read_multiple_files` | `paths` | Read 1–20 text files in one call. |
-| `write_file` | `path`, `content` | Create a file or replace its contents. |
-| `append_file` | `path`, `content` | Append text to a file. |
-| `edit_file` | `path`, `oldText`, `newText` | Replace a matching text occurrence. |
-| `copy_file` | `source`, `destination` | Copy a file. |
-| `move_file` | `source`, `destination` | Move or rename a file. |
-| `search_files` | `path`, `query` | Search names recursively; does not search file contents. |
-| `list_files` | `path` | List immediate directory entries. |
-| `get_file_info` | `path` | Return file or directory metadata. |
-| `get_file_hash` | `path` | Calculate a file's SHA-256 hash. |
-| `get_file_permissions` | `path` | Inspect permission bits. |
-| `set_file_permissions` | `path`, `mode` | Change permission bits using an integer mode. |
-| `trust_file` | `path` | Add a regular file to the local trust store. |
-| `untrust_file` | `path` | Remove a file from the local trust store. |
+| Tool                   | Inputs                       | Description                                              |
+| ---------------------- | ---------------------------- | -------------------------------------------------------- |
+| `read_file`            | `path`                       | Read a UTF-8 text file.                                  |
+| `read_multiple_files`  | `paths`                      | Read 1–20 text files in one call.                        |
+| `write_file`           | `path`, `content`            | Create a file or replace its contents.                   |
+| `append_file`          | `path`, `content`            | Append text to a file.                                   |
+| `edit_file`            | `path`, `oldText`, `newText` | Replace a matching text occurrence.                      |
+| `copy_file`            | `source`, `destination`      | Copy a file.                                             |
+| `move_file`            | `source`, `destination`      | Move or rename a file.                                   |
+| `search_files`         | `path`, `query`              | Search names recursively; does not search file contents. |
+| `list_files`           | `path`                       | List immediate directory entries.                        |
+| `get_file_info`        | `path`                       | Return file or directory metadata.                       |
+| `get_file_hash`        | `path`                       | Calculate a file's SHA-256 hash.                         |
+| `get_file_permissions` | `path`                       | Inspect permission bits.                                 |
+| `set_file_permissions` | `path`, `mode`               | Change permission bits using an integer mode.            |
+| `trust_file`           | `path`                       | Add a regular file to the local trust store.             |
+| `untrust_file`         | `path`                       | Remove a file from the local trust store.                |
+| `delete_file`           | `path`                       | Move a file into the `.trash/` folder; never permanently deletes it. |
+| `restore_from_trash`    | `path`                       | Restore a trashed file or directory to its original path. |
 
 ### Directory operations
 
-| Tool | Inputs | Description |
-| --- | --- | --- |
-| `create_directory` | `path` | Create a directory. |
-| `get_directory_tree` | `path`, optional `maxDepth` | Return a recursive directory tree. |
-| `get_directory_size` | `path` | Calculate the total directory size. |
-| `move_directory` | `source`, `destination` | Move a directory and update matching trust-store paths. |
-| `watch_directory` | `path`, optional `durationSeconds` | Watch for filesystem changes for 1–60 seconds. |
-| `trust_directory` | `path` | Add a directory to the local trust store. |
-| `untrust_directory` | `path` | Remove a directory from the local trust store. |
+| Tool                 | Inputs                             | Description                                             |
+| -------------------- | ---------------------------------- | ------------------------------------------------------- |
+| `create_directory`   | `path`                             | Create a directory.                                     |
+| `get_directory_tree` | `path`, optional `maxDepth`        | Return a recursive directory tree.                      |
+| `get_directory_size` | `path`                             | Calculate the total directory size.                     |
+| `move_directory`     | `source`, `destination`            | Move a directory and update matching trust-store paths. |
+| `watch_directory`    | `path`, optional `durationSeconds` | Watch for filesystem changes for 1–60 seconds.          |
+| `trust_directory`    | `path`                             | Add a directory to the local trust store.               |
+| `untrust_directory`  | `path`                             | Remove a directory from the local trust store.          |
+| `delete_directory`   | `path`                             | Move a directory and all its contents into `.trash/`.    |
+| `restore_directory`  | `path`                             | Restore a directory and all its contents from `.trash/`. |
 
 ### System tools
 
-| Tool | Inputs | Description |
-| --- | --- | --- |
-| `get_current_directory` | None | Return the server process working directory when it is within an allowed root. |
-| `list_allowed_roots` | None | List configured filesystem roots. |
-| `get_disk_usage` | `path` | Report total, used, free, and available disk space. |
-| `run_command` | `command`, optional `args`, `workingDirectory`, `confirmed` | Run commands accepted by the server's command allowlist. |
-| `take_screenshot` | optional `saveTo` | Capture the full desktop. |
-| `take_screenshot_region` | optional `saveTo` | Interactively capture a selected screen region. |
-| `take_window_screenshot` | optional `saveTo` | Capture the active application window. |
+| Tool                     | Inputs                                                      | Description                                                                    |
+| ------------------------ | ----------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `get_current_directory`  | None                                                        | Return the server process working directory when it is within an allowed root. |
+| `list_allowed_roots`     | None                                                        | List configured filesystem roots.                                              |
+| `get_disk_usage`         | `path`                                                      | Report total, used, free, and available disk space.                            |
+| `run_command`            | `command`, optional `args`, `workingDirectory`, `confirmed` | Run commands accepted by the server's command allowlist.                       |
+| `take_screenshot`        | optional `saveTo`                                           | Capture the full desktop.                                                      |
+| `take_screenshot_region` | optional `saveTo`                                           | Interactively capture a selected screen region.                                |
+| `take_window_screenshot` | optional `saveTo`                                           | Capture the active application window.                                         |
 
 Screenshot files can optionally be saved as PNG files inside an allowed root. Without `saveTo`, the image is returned to the MCP client and the temporary capture is cleaned up.
 
@@ -58,16 +62,16 @@ Screenshot files can optionally be saved as PNG files inside an allowed root. Wi
 
 Browser tools use Playwright and a headless Chromium browser. The current implementation keeps one browser session and one active page in memory.
 
-| Tool | Inputs | Description |
-| --- | --- | --- |
-| `browser_navigate` | `url`, optional `waitUntil` | Navigate to an HTTP or HTTPS URL. |
-| `browser_click` | `selector` | Click the first element matching a CSS selector. |
-| `browser_type` | `selector`, `text` | Fill the first matching form field. |
-| `browser_get_text` | optional `selector`, `maxCharacters` | Extract page text. |
-| `browser_get_links` | optional `limit` | List page links and their absolute URLs. |
-| `browser_screenshot` | optional `fullPage` | Return a PNG screenshot of the browser page. |
-| `browser_go_back` | None | Navigate back in browser history. |
-| `browser_close` | None | Close the current browser session. |
+| Tool                 | Inputs                               | Description                                      |
+| -------------------- | ------------------------------------ | ------------------------------------------------ |
+| `browser_navigate`   | `url`, optional `waitUntil`          | Navigate to an HTTP or HTTPS URL.                |
+| `browser_click`      | `selector`                           | Click the first element matching a CSS selector. |
+| `browser_type`       | `selector`, `text`                   | Fill the first matching form field.              |
+| `browser_get_text`   | optional `selector`, `maxCharacters` | Extract page text.                               |
+| `browser_get_links`  | optional `limit`                     | List page links and their absolute URLs.         |
+| `browser_screenshot` | optional `fullPage`                  | Return a PNG screenshot of the browser page.     |
+| `browser_go_back`    | None                                 | Navigate back in browser history.                |
+| `browser_close`      | None                                 | Close the current browser session.               |
 
 This is a basic browser automation layer, not a full browser-control framework. Multiple tabs, persistent login profiles, downloads/uploads, keyboard and mouse APIs, semantic locators, and network/console inspection are not currently implemented. URL validation currently checks the URL format, HTTP(S) protocol, and embedded credentials; it does **not** provide complete SSRF protection. Only navigate to websites you trust, and do not use this browser against private/internal network services.
 
@@ -103,9 +107,21 @@ local-filesystem-mcp/
 │   │   └── trust-store.ts
 │   ├── tools/
 │   │   ├── browser/
-│   │   │   └── browser.tool.ts
+│   │   │   ├── browser-context.ts
+│   │   │   ├── browser-navigate.tool.ts
+│   │   │   ├── browser-click.tool.ts
+│   │   │   ├── browser-type.tool.ts
+│   │   │   ├── browser-screenshot.tool.ts
+│   │   │   ├── browser-get-text.tool.ts
+│   │   │   ├── browser-get-links.tool.ts
+│   │   │   ├── browser-go-back.tool.ts
+│   │   │   └── browser-close.tool.ts
 │   │   ├── directory-operations/
+│   │   │   ├── delete-directory.tool.ts
+│   │   │   └── restore-directory.tool.ts
 │   │   ├── file-operations/
+│   │   │   ├── delete-file.tool.ts
+│   │   │   └── restore-from-trash.tool.ts
 │   │   ├── system/
 │   │   │   └── screenshot.tool.ts
 │   │   └── register-all-tools.ts
@@ -124,7 +140,7 @@ local-filesystem-mcp/
 └── README.md
 ```
 
-The trust store is stored under `logs/trust-store.json`; audit events are written under `logs/`. The exact source files for each tool are grouped by operation type.
+The trust store is stored under `logs/trust-store.json`; audit events are written under `logs/`. Trash is stored in a `.trash/` directory inside the corresponding allowed root. Original relative paths are preserved, and restore operations refuse to overwrite an existing destination. Directory moves also update matching trust-store paths. The exact source files for each tool are grouped by operation type.
 
 ## Prerequisites
 
@@ -165,13 +181,13 @@ Playwright is installed as a project dependency in `node_modules`. Chromium is d
 
 Create a `.env` file in the project root. Configure the variables supported by `src/config/env.ts`:
 
-| Variable | Default | Description |
-| --- | --- | --- |
-| `FILESYSTEM_ROOTS` | Current user's home directory | One or more existing absolute paths the server is allowed to access. Separate multiple roots with the platform path delimiter (usually `: ` on POSIX without the space, and `; ` on Windows without the space). |
-| `FILESYSTEM_READ_ONLY` | `false` | Set to `true` to block filesystem write, append, edit, copy, move, and directory-creation actions. |
-| `HTTP_HOST` | `127.0.0.1` | HTTP bind host. The current schema accepts only `127.0.0.1`. |
-| `HTTP_PORT` | `3002` | HTTP server port. |
-| `MCP_AUTH_TOKEN` | Required | A non-empty token required by environment validation. |
+| Variable               | Default                       | Description                                                                                                                                                                                                     |
+| ---------------------- | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FILESYSTEM_ROOTS`     | Current user's home directory | One or more existing absolute paths the server is allowed to access. Separate multiple roots with the platform path delimiter (usually `: ` on POSIX without the space, and `; ` on Windows without the space). |
+| `FILESYSTEM_READ_ONLY` | `false`                       | Set to `true` to block filesystem write, append, edit, copy, move, and directory-creation actions.                                                                                                              |
+| `HTTP_HOST`            | `127.0.0.1`                   | HTTP bind host. The current schema accepts only `127.0.0.1`.                                                                                                                                                    |
+| `HTTP_PORT`            | `3002`                        | HTTP server port.                                                                                                                                                                                               |
+| `MCP_AUTH_TOKEN`       | Required                      | A non-empty token required by environment validation.                                                                                                                                                           |
 
 Example for Linux:
 
@@ -189,13 +205,13 @@ Use real paths that exist on your machine. Do not commit `.env` or publish your 
 
 Available scripts:
 
-| Command | Purpose |
-| --- | --- |
-| `pnpm dev` | Run the TypeScript server with `tsx watch`. |
-| `pnpm build` | Compile TypeScript into `dist/`. |
-| `pnpm start` | Run the compiled server. |
-| `pnpm test` | Run the Node.js test suites. |
-| `pnpm format` | Format project files with Prettier. |
+| Command       | Purpose                                     |
+| ------------- | ------------------------------------------- |
+| `pnpm dev`    | Run the TypeScript server with `tsx watch`. |
+| `pnpm build`  | Compile TypeScript into `dist/`.            |
+| `pnpm start`  | Run the compiled server.                    |
+| `pnpm test`   | Run the Node.js test suites.                |
+| `pnpm format` | Format project files with Prettier.         |
 
 Build and start:
 
@@ -250,7 +266,7 @@ Use an absolute path to `dist/index.js`, build before connecting, and ensure the
 
 - **Allowed roots:** Filesystem paths are validated against the configured roots. Use the narrowest roots that support your workflow.
 - **Read-only mode:** Set `FILESYSTEM_READ_ONLY=true` when you only need to inspect files.
-- **No permanent deletion tools:** The server does not register file deletion or directory deletion tools.
+- **Trash instead of permanent deletion:** `delete_file` and `delete_directory` move items into `.trash/` under the matching allowed root. They preserve the original relative path and refuse to overwrite an existing Trash item.\n- **Restore support:** `restore_from_trash` restores a trashed file or directory automatically; `restore_directory` restores directories specifically. Restore refuses to overwrite an existing original path. For nested items, restore parent directories first.
 - **Overwrites and moves:** `write_file` can replace an existing file; move operations change paths; permission tools change access bits. Review these actions before invoking them.
 - **Command execution:** `run_command` accepts only commands and arguments permitted by the project's allowlist. Shell interpretation is disabled.
 - **Audit logging:** Tool operations are recorded in the local logs directory.
@@ -276,16 +292,16 @@ pnpm exec prettier --check .
 
 ## Troubleshooting
 
-| Problem | What to check |
-| --- | --- |
-| `pnpm` is unavailable | Enable Corepack and activate the pnpm version declared in `package.json`. |
-| `playwright: command not found` | Run `pnpm install` in this project directory and confirm `playwright` appears in `dependencies`. |
-| Chromium executable is missing | Run `pnpm exec playwright install chromium`. |
-| Chromium reports missing Linux libraries | Run `pnpm exec playwright install --with-deps chromium` or install the required OS packages. |
-| Screenshot capture fails | Install one of the supported screenshot utilities and ensure a graphical desktop session is available. |
-| Filesystem path is rejected | Confirm the path is absolute and falls within one of `FILESYSTEM_ROOTS`. |
-| Write operation is denied | Check `FILESYSTEM_READ_ONLY` and operating-system permissions. |
-| HTTP endpoint does not respond | Confirm `HTTP_HOST`, `HTTP_PORT`, server startup logs, and that the request path is `/mcp`. |
+| Problem                                  | What to check                                                                                          |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `pnpm` is unavailable                    | Enable Corepack and activate the pnpm version declared in `package.json`.                              |
+| `playwright: command not found`          | Run `pnpm install` in this project directory and confirm `playwright` appears in `dependencies`.       |
+| Chromium executable is missing           | Run `pnpm exec playwright install chromium`.                                                           |
+| Chromium reports missing Linux libraries | Run `pnpm exec playwright install --with-deps chromium` or install the required OS packages.           |
+| Screenshot capture fails                 | Install one of the supported screenshot utilities and ensure a graphical desktop session is available. |
+| Filesystem path is rejected              | Confirm the path is absolute and falls within one of `FILESYSTEM_ROOTS`.                               |
+| Write operation is denied                | Check `FILESYSTEM_READ_ONLY` and operating-system permissions.                                         |
+| HTTP endpoint does not respond           | Confirm `HTTP_HOST`, `HTTP_PORT`, server startup logs, and that the request path is `/mcp`.            |
 
 ## Contributing
 

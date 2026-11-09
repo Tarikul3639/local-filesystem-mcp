@@ -1,6 +1,8 @@
 import type { McpServer } from "@modelcontextprotocol/server";
 import { registerAppendFileTool } from "./file-operations/append-file.tool.js";
 import { registerCopyFileTool } from "./file-operations/copy-file.tool.js";
+import { registerDeleteFileTool } from "./file-operations/delete-file.tool.js";
+import { registerRestoreFromTrashTool } from "./file-operations/restore-from-trash.tool.js";
 import { registerEditFileTool } from "./file-operations/edit-file.tool.js";
 import { registerGetFileHashTool } from "./file-operations/get-file-hash.tool.js";
 import { registerGetFileInfoTool } from "./file-operations/get-file-info.tool.js";
@@ -15,6 +17,8 @@ import { registerTrustFileTool } from "./file-operations/trust-file.tool.js";
 import { registerUntrustFileTool } from "./file-operations/untrust-file.tool.js";
 import { registerWriteFileTool } from "./file-operations/write-file.tool.js";
 import { registerCreateDirectoryTool } from "./directory-operations/create-directory.tool.js";
+import { registerDeleteDirectoryTool } from "./directory-operations/delete-directory.tool.js";
+import { registerRestoreDirectoryTool } from "./directory-operations/restore-directory.tool.js";
 import { registerGetDirectorySizeTool } from "./directory-operations/get-directory-size.tool.js";
 import { registerGetDirectoryTreeTool } from "./directory-operations/get-directory-tree.tool.js";
 import { registerMoveDirectoryTool } from "./directory-operations/move-directory.tool.js";
@@ -26,11 +30,20 @@ import { registerGetDiskUsageTool } from "./system/get-disk-usage.tool.js";
 import { registerListAllowedRootsTool } from "./system/list-allowed-roots.tool.js";
 import { registerRunCommandTool } from "./system/run-command.tool.js";
 import { registerScreenshotTools } from "./system/screenshot.tool.js";
-import { registerBrowserTools } from "./browser/browser.tool.js";
+import { registerBrowserNavigateTool } from "./browser/browser-navigate.tool.js";
+import { registerBrowserClickTool } from "./browser/browser-click.tool.js";
+import { registerBrowserTypeTool } from "./browser/browser-type.tool.js";
+import { registerBrowserScreenshotTool } from "./browser/browser-screenshot.tool.js";
+import { registerBrowserGetTextTool } from "./browser/browser-get-text.tool.js";
+import { registerBrowserGetLinksTool } from "./browser/browser-get-links.tool.js";
+import { registerBrowserGoBackTool } from "./browser/browser-go-back.tool.js";
+import { registerBrowserCloseTool } from "./browser/browser-close.tool.js";
 
 export function registerAllTools(server: McpServer): void {
   registerAppendFileTool(server);
   registerCopyFileTool(server);
+  registerDeleteFileTool(server);
+  registerRestoreFromTrashTool(server);
   registerEditFileTool(server);
   registerGetFileHashTool(server);
   registerGetFileInfoTool(server);
@@ -45,6 +58,8 @@ export function registerAllTools(server: McpServer): void {
   registerUntrustFileTool(server);
   registerWriteFileTool(server);
   registerCreateDirectoryTool(server);
+  registerDeleteDirectoryTool(server);
+  registerRestoreDirectoryTool(server);
   registerGetDirectorySizeTool(server);
   registerGetDirectoryTreeTool(server);
   registerMoveDirectoryTool(server);
@@ -56,5 +71,12 @@ export function registerAllTools(server: McpServer): void {
   registerListAllowedRootsTool(server);
   registerRunCommandTool(server);
   registerScreenshotTools(server);
-  registerBrowserTools(server);
+  registerBrowserNavigateTool(server);
+  registerBrowserClickTool(server);
+  registerBrowserTypeTool(server);
+  registerBrowserScreenshotTool(server);
+  registerBrowserGetTextTool(server);
+  registerBrowserGetLinksTool(server);
+  registerBrowserGoBackTool(server);
+  registerBrowserCloseTool(server);
 }

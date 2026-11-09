@@ -9,6 +9,8 @@ export type AuditAction =
   | "edit"
   | "copy"
   | "move"
+  | "trash"
+  | "restore"
   | "create_directory"
   | "search"
   | "set_permissions"
