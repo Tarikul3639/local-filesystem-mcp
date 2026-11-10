@@ -4,6 +4,18 @@ A local TypeScript [Model Context Protocol (MCP)](https://modelcontextprotocol.i
 
 Filesystem operations are restricted to configured allowed roots. The server includes permission checks and audit logging. It intentionally does **not** expose permanent file or directory deletion tools.
 
+## Project icon: preview and download
+
+The repository includes the MCP folder sparkle icon at `public/mcp-folder-sparkle-icon.png`.
+
+**Preview**
+
+![MCP folder sparkle icon](public/mcp-folder-sparkle-icon.png)
+
+**Download:** [mcp-folder-sparkle-icon.png](public/mcp-folder-sparkle-icon.png)
+
+You can open the preview above in a Markdown-compatible viewer or use the download link to save the original PNG.
+
 ## Features
 
 The server registers **41 MCP tools** across five areas.
