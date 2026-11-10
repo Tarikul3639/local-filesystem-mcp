@@ -6,7 +6,7 @@ import { mkdtemp, mkdir, writeFile, rm, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { validatePath } from "../src/security/path-validator.js";
+import { validatePath } from "../security/path-validator.js";
 
 describe("🛡️ Filesystem Security Tests", () => {
   let testRoot: string;

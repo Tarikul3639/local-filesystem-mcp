@@ -16,6 +16,7 @@ import { registerSetFilePermissionsTool } from "./file-operations/set-file-permi
 import { registerTrustFileTool } from "./file-operations/trust-file.tool.js";
 import { registerUntrustFileTool } from "./file-operations/untrust-file.tool.js";
 import { registerWriteFileTool } from "./file-operations/write-file.tool.js";
+import { registerSaveBinaryFileTool } from "./file-operations/save-binary-file.tool.js";
 import { registerCreateDirectoryTool } from "./directory-operations/create-directory.tool.js";
 import { registerDeleteDirectoryTool } from "./directory-operations/delete-directory.tool.js";
 import { registerRestoreDirectoryTool } from "./directory-operations/restore-directory.tool.js";
@@ -57,6 +58,7 @@ export function registerAllTools(server: McpServer): void {
   registerTrustFileTool(server);
   registerUntrustFileTool(server);
   registerWriteFileTool(server);
+  registerSaveBinaryFileTool(server);
   registerCreateDirectoryTool(server);
   registerDeleteDirectoryTool(server);
   registerRestoreDirectoryTool(server);

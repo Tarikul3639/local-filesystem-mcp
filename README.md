@@ -363,3 +363,15 @@ The `browser_screenshot` tool accepts `fullPage` and an optional `saveTo` absolu
 ```
 
 The screenshot save destination is checked against the same root, blocked-path, and dotenv-file policies as other filesystem operations.
+
+## Saving binary files from AI clients
+
+The `save_binary_file` MCP tool saves arbitrary file types (images, PDFs, office documents, audio, video, and archives) from base64-encoded bytes to an absolute destination path inside a configured filesystem root.
+
+- No application-level file-size limit is imposed; practical limits depend on the MCP client/transport, available memory, and disk space because the bytes are passed as base64 in the tool request.
+- Destination paths are checked with the existing filesystem path validator.
+- Write permission and audit logging are enforced.
+- Existing files are not overwritten unless `overwrite: true` is explicitly supplied.
+- The MCP client must provide the file bytes as base64; this tool does not extract attachments from chat history or download arbitrary URLs.
+
+Restart the MCP server/client after updating the server so the new tool is discovered. For a browser right-click “Save to Local Filesystem” menu, a separate browser extension or client-side integration is required; an MCP server alone cannot add browser context-menu entries.
