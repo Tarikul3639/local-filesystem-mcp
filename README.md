@@ -18,13 +18,14 @@ You can open the preview above in a Markdown-compatible viewer or use the downlo
 
 ## Features
 
-The server registers **41 MCP tools** across five areas.
+The server registers **42 MCP tools** across five areas.
 
 ### File operations
 
 | Tool                   | Inputs                       | Description                                                          |
 | ---------------------- | ---------------------------- | -------------------------------------------------------------------- |
 | `read_file`            | `path`                       | Read a UTF-8 text file.                                              |
+| `read_binary_file`     | `path`, optional `maxBytes`  | Return a binary file as Base64 with its name, size, and MIME type (up to 10 MiB). |
 | `read_multiple_files`  | `paths`                      | Read 1–20 text files in one call.                                    |
 | `write_file`           | `path`, `content`            | Create a file or replace its contents.                               |
 | `append_file`          | `path`, `content`            | Append text to a file.                                               |

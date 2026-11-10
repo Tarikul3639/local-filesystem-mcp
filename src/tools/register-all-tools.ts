@@ -10,6 +10,7 @@ import { registerGetFilePermissionsTool } from "./file-operations/get-file-permi
 import { registerListFilesTool } from "./file-operations/list-files.tool.js";
 import { registerMoveFileTool } from "./file-operations/move-file.tool.js";
 import { registerReadFileTool } from "./file-operations/read-file.tool.js";
+import { registerReadBinaryFileTool } from "./file-operations/read-binary-file.tool.js";
 import { registerReadMultipleFilesTool } from "./file-operations/read-multiple-files.tool.js";
 import { registerSearchFilesTool } from "./file-operations/search-files.tool.js";
 import { registerSetFilePermissionsTool } from "./file-operations/set-file-permissions.tool.js";
@@ -53,6 +54,7 @@ export function registerAllTools(server: McpServer): void {
   registerListFilesTool(server);
   registerMoveFileTool(server);
   registerReadFileTool(server);
+  registerReadBinaryFileTool(server);
   registerReadMultipleFilesTool(server);
   registerSearchFilesTool(server);
   registerSetFilePermissionsTool(server);
