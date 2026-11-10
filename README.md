@@ -10,37 +10,37 @@ The server registers **41 MCP tools** across five areas.
 
 ### File operations
 
-| Tool                   | Inputs                       | Description                                              |
-| ---------------------- | ---------------------------- | -------------------------------------------------------- |
-| `read_file`            | `path`                       | Read a UTF-8 text file.                                  |
-| `read_multiple_files`  | `paths`                      | Read 1–20 text files in one call.                        |
-| `write_file`           | `path`, `content`            | Create a file or replace its contents.                   |
-| `append_file`          | `path`, `content`            | Append text to a file.                                   |
-| `edit_file`            | `path`, `oldText`, `newText` | Replace a matching text occurrence.                      |
-| `copy_file`            | `source`, `destination`      | Copy a file.                                             |
-| `move_file`            | `source`, `destination`      | Move or rename a file.                                   |
-| `search_files`         | `path`, `query`              | Search names recursively; does not search file contents. |
-| `list_files`           | `path`                       | List immediate directory entries.                        |
-| `get_file_info`        | `path`                       | Return file or directory metadata.                       |
-| `get_file_hash`        | `path`                       | Calculate a file's SHA-256 hash.                         |
-| `get_file_permissions` | `path`                       | Inspect permission bits.                                 |
-| `set_file_permissions` | `path`, `mode`               | Change permission bits using an integer mode.            |
-| `trust_file`           | `path`                       | Add a regular file to the local trust store.             |
-| `untrust_file`         | `path`                       | Remove a file from the local trust store.                |
-| `delete_file`           | `path`                       | Move a file into the `.trash/` folder; never permanently deletes it. |
-| `restore_from_trash`    | `path`                       | Restore a trashed file or directory to its original path. |
+| Tool                   | Inputs                       | Description                                                          |
+| ---------------------- | ---------------------------- | -------------------------------------------------------------------- |
+| `read_file`            | `path`                       | Read a UTF-8 text file.                                              |
+| `read_multiple_files`  | `paths`                      | Read 1–20 text files in one call.                                    |
+| `write_file`           | `path`, `content`            | Create a file or replace its contents.                               |
+| `append_file`          | `path`, `content`            | Append text to a file.                                               |
+| `edit_file`            | `path`, `oldText`, `newText` | Replace a matching text occurrence.                                  |
+| `copy_file`            | `source`, `destination`      | Copy a file.                                                         |
+| `move_file`            | `source`, `destination`      | Move or rename a file.                                               |
+| `search_files`         | `path`, `query`              | Search names recursively; does not search file contents.             |
+| `list_files`           | `path`                       | List immediate directory entries.                                    |
+| `get_file_info`        | `path`                       | Return file or directory metadata.                                   |
+| `get_file_hash`        | `path`                       | Calculate a file's SHA-256 hash.                                     |
+| `get_file_permissions` | `path`                       | Inspect permission bits.                                             |
+| `set_file_permissions` | `path`, `mode`               | Change permission bits using an integer mode.                        |
+| `trust_file`           | `path`                       | Add a regular file to the local trust store.                         |
+| `untrust_file`         | `path`                       | Remove a file from the local trust store.                            |
+| `delete_file`          | `path`                       | Move a file into the `.trash/` folder; never permanently deletes it. |
+| `restore_from_trash`   | `path`                       | Restore a trashed file or directory to its original path.            |
 
 ### Directory operations
 
-| Tool                 | Inputs                             | Description                                             |
-| -------------------- | ---------------------------------- | ------------------------------------------------------- |
-| `create_directory`   | `path`                             | Create a directory.                                     |
-| `get_directory_tree` | `path`, optional `maxDepth`        | Return a recursive directory tree.                      |
-| `get_directory_size` | `path`                             | Calculate the total directory size.                     |
-| `move_directory`     | `source`, `destination`            | Move a directory and update matching trust-store paths. |
-| `watch_directory`    | `path`, optional `durationSeconds` | Watch for filesystem changes for 1–60 seconds.          |
-| `trust_directory`    | `path`                             | Add a directory to the local trust store.               |
-| `untrust_directory`  | `path`                             | Remove a directory from the local trust store.          |
+| Tool                 | Inputs                             | Description                                              |
+| -------------------- | ---------------------------------- | -------------------------------------------------------- |
+| `create_directory`   | `path`                             | Create a directory.                                      |
+| `get_directory_tree` | `path`, optional `maxDepth`        | Return a recursive directory tree.                       |
+| `get_directory_size` | `path`                             | Calculate the total directory size.                      |
+| `move_directory`     | `source`, `destination`            | Move a directory and update matching trust-store paths.  |
+| `watch_directory`    | `path`, optional `durationSeconds` | Watch for filesystem changes for 1–60 seconds.           |
+| `trust_directory`    | `path`                             | Add a directory to the local trust store.                |
+| `untrust_directory`  | `path`                             | Remove a directory from the local trust store.           |
 | `delete_directory`   | `path`                             | Move a directory and all its contents into `.trash/`.    |
 | `restore_directory`  | `path`                             | Restore a directory and all its contents from `.trash/`. |
 
@@ -314,3 +314,40 @@ pnpm exec prettier --check .
 ## License
 
 This project is licensed under the MIT License. See [LICENSE](LICENSE).
+
+## Filesystem access policies
+
+The server applies path restrictions centrally through `validatePath`, so the rules cover file, directory, and browser screenshot save operations.
+
+| Variable                      | Default                       | Purpose                                                                                                              |
+| ----------------------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `FILESYSTEM_ROOTS`            | Current user's home directory | One or more allowed base directories.                                                                                |
+| `FILESYSTEM_DENY_ROOT_ACCESS` | `true`                        | Blocks direct access to each configured root itself while allowing permitted child paths.                            |
+| `FILESYSTEM_BLOCKED_PATHS`    | Empty                         | Explicit absolute file or directory paths to deny, including all descendants of a blocked directory.                 |
+| `FILESYSTEM_ALLOW_ENV_FILES`  | `false`                       | Allows or blocks dotenv files such as `.env`, `.env.local`, and `.env.production`. `.env.example` is always allowed. |
+| `FILESYSTEM_READ_ONLY`        | `false`                       | Blocks filesystem write operations when enabled.                                                                     |
+
+On Linux/macOS, separate multiple paths with `:`; on Windows, use `; ` (without the space). For example:
+
+```dotenv
+FILESYSTEM_ROOTS=/home/your-user/Desktop:/home/your-user/Downloads
+FILESYSTEM_DENY_ROOT_ACCESS=true
+FILESYSTEM_BLOCKED_PATHS=/home/your-user/Desktop/Private:/home/your-user/Documents/Confidential
+FILESYSTEM_ALLOW_ENV_FILES=false
+FILESYSTEM_READ_ONLY=false
+```
+
+A blocked directory also blocks every path below it. Configure exact absolute paths that exist on disk. The configured roots should be broad enough to contain the folders you need, but as narrow as practical. Denying a root blocks listing or reading that root directly; it does not automatically block its children.
+
+### Browser screenshots
+
+The `browser_screenshot` tool accepts `fullPage` and an optional `saveTo` absolute path. The destination must end in `.png`, be inside an allowed root, and must not already exist. Example:
+
+```json
+{
+  "fullPage": true,
+  "saveTo": "/home/your-user/Desktop/project/docs/screenshots/home.png"
+}
+```
+
+The screenshot save destination is checked against the same root, blocked-path, and dotenv-file policies as other filesystem operations.

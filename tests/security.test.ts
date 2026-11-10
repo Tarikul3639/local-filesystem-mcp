@@ -46,11 +46,19 @@ describe("🛡️ Filesystem Security Tests", () => {
     assert.equal(result, filePath);
   });
 
-  // 2. Existing directory
-  it("should allow access to an allowed directory", async () => {
-    const result = await validatePath(allowedDir, testRoots);
+  // 2. The configured root itself is blocked by default
+  it("should block direct access to an allowed root", async () => {
+    await assert.rejects(
+      validatePath(allowedDir, testRoots),
+      /Access to the allowed root directory itself is disabled/,
+    );
+  });
 
-    assert.equal(result, allowedDir);
+  it("should allow access to a child directory inside an allowed root", async () => {
+    const childDir = join(allowedDir, "child");
+    await mkdir(childDir);
+    const result = await validatePath(childDir, testRoots);
+    assert.equal(result, childDir);
   });
 
   // 3. Block outside directory
@@ -134,7 +142,23 @@ describe("🛡️ Filesystem Security Tests", () => {
     await assert.rejects(validatePath(newFile, testRoots));
   });
 
-  // 14. Reject when no allowed roots are configured
+  // 14. Reject dotenv secrets but allow the example template
+  it("should block .env files by default", async () => {
+    const envPath = join(allowedDir, ".env");
+    await writeFile(envPath, "SECRET=value");
+    await assert.rejects(
+      validatePath(envPath, testRoots),
+      /\.env files are disabled/,
+    );
+  });
+
+  it("should allow .env.example", async () => {
+    const examplePath = join(allowedDir, ".env.example");
+    await writeFile(examplePath, "EXAMPLE=value");
+    assert.equal(await validatePath(examplePath, testRoots), examplePath);
+  });
+
+  // 15. Reject when no allowed roots are configured
   it("should reject empty allowed roots", async () => {
     await assert.rejects(
       validatePath(join(allowedDir, "test.txt"), []),

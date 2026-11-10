@@ -2,7 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 
 import { McpServer } from "@modelcontextprotocol/server";
-import { registerListFilesTool } from "../src/tools/list-files.tool.js";
+import { registerAllTools } from "../src/tools/register-all-tools.js";
 
 describe("MCP Tools Tests", () => {
   it("should register the list_files tool", async () => {
@@ -11,7 +11,7 @@ describe("MCP Tools Tests", () => {
       version: "1.0.0",
     });
 
-    registerListFilesTool(server);
+    registerAllTools(server);
 
     // Check if the tool is registered
     assert.ok(server);

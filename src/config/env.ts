@@ -3,6 +3,16 @@ import { homedir } from "node:os";
 import { delimiter, isAbsolute } from "node:path";
 import * as z from "zod/v4";
 
+const pathList = z
+  .string()
+  .default("")
+  .transform((value) =>
+    value
+      .split(delimiter)
+      .map((path) => path.trim())
+      .filter(Boolean),
+  );
+
 const envSchema = z.object({
   FILESYSTEM_ROOTS: z
     .string()
@@ -20,9 +30,21 @@ const envSchema = z.object({
     )
     .refine(
       (paths) => paths.every(isAbsolute),
-      "All filesystem roots must be absolute paths",
+      "All filesystem roots must be absolute",
     ),
   FILESYSTEM_READ_ONLY: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
+  FILESYSTEM_DENY_ROOT_ACCESS: z
+    .enum(["true", "false"])
+    .default("true")
+    .transform((value) => value === "true"),
+  FILESYSTEM_BLOCKED_PATHS: pathList.refine(
+    (paths) => paths.every(isAbsolute),
+    "All blocked paths must be absolute",
+  ),
+  FILESYSTEM_ALLOW_ENV_FILES: z
     .enum(["true", "false"])
     .default("false")
     .transform((value) => value === "true"),
@@ -30,6 +52,7 @@ const envSchema = z.object({
   HTTP_PORT: z.coerce.number().int().min(1).max(65535).default(3002),
   MCP_AUTH_TOKEN: z.string().min(1, "MCP_AUTH_TOKEN cannot be empty"),
 });
+
 const result = envSchema.safeParse(process.env);
 if (!result.success) {
   console.error("Invalid environment configuration:");
