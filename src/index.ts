@@ -13,6 +13,6 @@ console.error("Local Filesystem MCP Server is starting...");
 console.error(`Filesystem Roots: ${env.FILESYSTEM_ROOTS.join(", ")}`);
 console.error(`Read-Only Mode: ${env.FILESYSTEM_READ_ONLY}`);
 console.error("Permanent deletion tools: disabled");
-console.error("Registered Tools: 37");
+console.error("Registered Tools: 48");
 await startStdioTransport(server);
 await startHttpTransport(server);

@@ -6,7 +6,10 @@ import { mkdtemp, mkdir, writeFile, rm, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { validatePath } from "../security/path-validator.js";
+// Keep this security test deterministic even when the developer's .env overrides the default.
+process.env.FILESYSTEM_DENY_ROOT_ACCESS = "true";
+
+const { validatePath } = await import("../security/path-validator.js");
 
 describe("🛡️ Filesystem Security Tests", () => {
   let testRoot: string;

@@ -18,7 +18,7 @@ You can open the preview above in a Markdown-compatible viewer or use the downlo
 
 ## Features
 
-The server registers **42 MCP tools** across five areas.
+The server registers **48 MCP tools** across four areas: 24 file-operation tools, 9 directory-operation tools, 7 system and screenshot tools, and 8 browser-automation tools.
 
 ### File operations
 
@@ -42,6 +42,12 @@ The server registers **42 MCP tools** across five areas.
 | `untrust_file`         | `path`                       | Remove a file from the local trust store.                            |
 | `delete_file`          | `path`                       | Move a file into the `.trash/` folder; never permanently deletes it. |
 | `restore_from_trash`   | `path`                       | Restore a trashed file or directory to its original path.            |
+| `save_binary_file`     | `path`, `base64Data`, optional `sha256`, `overwrite` | Save Base64-encoded binary content with optional checksum verification. |
+| `begin_file_upload`    | `path`, `totalBytes`, `totalChunks`, `sha256`, optional `overwrite` | Start a resumable chunked upload. |
+| `write_file_chunk`     | `transferId`, `chunkIndex`, `base64Data` | Append the next sequential upload chunk. |
+| `get_file_upload_status` | `transferId` | Check resumable upload progress. |
+| `finish_file_upload`  | `transferId` | Verify size, chunk count, and SHA-256 before publishing the file. |
+| `abort_file_upload`   | `transferId` | Abort an upload and remove its temporary file. |
 
 ### Directory operations
 
