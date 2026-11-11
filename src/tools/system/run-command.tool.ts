@@ -1,8 +1,11 @@
 import type { McpServer } from "@modelcontextprotocol/server";
 import * as z from "zod/v4";
 
-import { ALLOWED_COMMAND_NAMES } from "../../security/command-allowlist.js";
 import { runCommand } from "../../security/command-runner.js";
+import {
+  getGitSubcommand,
+  isGitExecutable,
+} from "../../security/command-policy.js";
 import { logAuditEvent } from "../../security/audit-log.js";
 import { assertPermission } from "../../security/permissions.js";
 
@@ -11,9 +14,9 @@ export function registerRunCommandTool(server: McpServer): void {
     "run_command",
     {
       description:
-        "Run an approved command inside an allowed filesystem directory",
+        "Run any executable inside an allowed working directory, except commands blocked by the security denylist",
       inputSchema: {
-        command: z.enum(ALLOWED_COMMAND_NAMES),
+        command: z.string().trim().min(1).max(256),
         args: z.array(z.string()).default([]),
         workingDirectory: z.string().optional(),
         confirmed: z.boolean().default(false),
@@ -29,8 +32,24 @@ export function registerRunCommandTool(server: McpServer): void {
       try {
         assertPermission("execute");
 
+        const isGit = isGitExecutable(command);
+        const gitSubcommand = isGit ? getGitSubcommand(args) : undefined;
         const requiresConfirmation =
-          command === "git" && (args[0] === "add" || args[0] === "commit");
+          isGit &&
+          [
+            "add",
+            "commit",
+            "reset",
+            "restore",
+            "checkout",
+            "switch",
+            "merge",
+            "rebase",
+            "cherry-pick",
+            "revert",
+            "pull",
+            "stash",
+          ].includes(gitSubcommand ?? "");
 
         if (requiresConfirmation && !confirmed) {
           return {

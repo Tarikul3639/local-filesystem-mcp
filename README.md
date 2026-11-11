@@ -70,7 +70,7 @@ The server registers **48 MCP tools** across four areas: 24 file-operation tools
 | `get_current_directory`  | None                                                        | Return the server process working directory when it is within an allowed root. |
 | `list_allowed_roots`     | None                                                        | List configured filesystem roots.                                              |
 | `get_disk_usage`         | `path`                                                      | Report total, used, free, and available disk space.                            |
-| `run_command`            | `command`, optional `args`, `workingDirectory`, `confirmed` | Run commands accepted by the server's command allowlist.                       |
+| `run_command`            | `command`, optional `args`, `workingDirectory`, `confirmed` | Run any executable except commands rejected by the security denylist.         |
 | `take_screenshot`        | optional `saveTo`                                           | Capture the full desktop.                                                      |
 | `take_screenshot_region` | optional `saveTo`                                           | Interactively capture a selected screen region.                                |
 | `take_window_screenshot` | optional `saveTo`                                           | Capture the active application window.                                         |
@@ -287,7 +287,7 @@ Use an absolute path to `dist/index.js`, build before connecting, and ensure the
 - **Read-only mode:** Set `FILESYSTEM_READ_ONLY=true` when you only need to inspect files.
 - **Trash instead of permanent deletion:** `delete_file` and `delete_directory` move items into `.trash/` under the matching allowed root. They preserve the original relative path and refuse to overwrite an existing Trash item.\n- **Restore support:** `restore_from_trash` restores a trashed file or directory automatically; `restore_directory` restores directories specifically. Restore refuses to overwrite an existing original path. For nested items, restore parent directories first.
 - **Overwrites and moves:** `write_file` can replace an existing file; move operations change paths; permission tools change access bits. Review these actions before invoking them.
-- **Command execution:** `run_command` accepts only commands and arguments permitted by the project's allowlist. Shell interpretation is disabled.
+- **Command execution:** `run_command` accepts arbitrary executable names and arguments, with the denylist checked on every invocation. Privilege-escalation tools, destructive disk/file commands, permission-changing tools, shells/interpreters, remote-access utilities, and Git push-related operations are blocked. Shell interpretation is disabled (`shell: false`). The denylist is defense-in-depth, not an OS sandbox: allowed programs and package scripts can launch other processes or access files using the server process's operating-system permissions. Run this server as an unprivileged user and keep `FILESYSTEM_ROOTS` narrow.
 - **Audit logging:** Tool operations are recorded in the local logs directory.
 - **Trust store:** Trusted file and directory entries are stored locally. Trust registration is not a substitute for operating-system permissions or content validation.
 - **Browser security:** Browser URL checks are basic and do not fully prevent server-side request forgery (SSRF). Do not browse untrusted URLs or internal/private network targets.

@@ -10,6 +10,10 @@ import { join } from "node:path";
 process.env.FILESYSTEM_DENY_ROOT_ACCESS = "true";
 
 const { validatePath } = await import("../security/path-validator.js");
+const {
+  BLOCKED_COMMANDS,
+  isAllowedCommand,
+} = await import("../security/command-policy.js");
 
 describe("🛡️ Filesystem Security Tests", () => {
   let testRoot: string;
@@ -167,5 +171,41 @@ describe("🛡️ Filesystem Security Tests", () => {
       validatePath(join(allowedDir, "test.txt"), []),
       /No filesystem roots configured/,
     );
+  });
+});
+
+describe("🚫 Command execution security", () => {
+  it("should keep Git push in the central blocked-command array", () => {
+    assert.ok(BLOCKED_COMMANDS.includes("git push"));
+    assert.equal(isAllowedCommand("git", ["push"]), false);
+    assert.equal(isAllowedCommand("git", ["-c", "alias.p=!git push", "p"]), false);
+  });
+
+  it("should block Git push even when options or wrappers precede the subcommand", () => {
+    assert.equal(isAllowedCommand("git", ["-C", "/tmp/repo", "push"]), false);
+    assert.equal(isAllowedCommand("git", ["--no-pager", "push"]), false);
+    assert.equal(isAllowedCommand("pnpm", ["exec", "git", "push"]), false);
+    assert.equal(isAllowedCommand("pnpm", ["exec", "git", "-C", ".", "push"]), false);
+  });
+
+  it("should reject Git aliases and config-based command overrides", () => {
+    assert.equal(isAllowedCommand("git", ["p"]), false);
+    assert.equal(isAllowedCommand("git", ["-c", "alias.p=!git push", "p"]), false);
+    assert.equal(isAllowedCommand("git", ["config", "alias.p", "!git push"]), false);
+    assert.equal(isAllowedCommand("git", ["commit", "-m", "push config fix"]), true);
+  });
+
+  it("should allow ordinary executables and block dangerous executable names", () => {
+    assert.equal(isAllowedCommand("echo", ["hello"]), true);
+    assert.equal(isAllowedCommand("/bin/rm", ["-rf", "/tmp/test"]), false);
+    assert.equal(isAllowedCommand("sudo", ["cat", "/etc/shadow"]), false);
+    assert.equal(isAllowedCommand("bash", ["-c", "echo unsafe"]), false);
+  });
+
+  it("should allow the project's development scripts", () => {
+    assert.equal(isAllowedCommand("pnpm", ["run", "dev"]), true);
+    assert.equal(isAllowedCommand("pnpm", ["run", "build"]), true);
+    assert.equal(isAllowedCommand("pnpm", ["run", "test"]), true);
+    assert.equal(isAllowedCommand("pnpm", ["run", "format"]), true);
   });
 });

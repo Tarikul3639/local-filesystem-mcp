@@ -3,7 +3,7 @@ import { stat } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { validatePath } from "./path-validator.js";
-import { validateCommand } from "./command-validator.js";
+import { validateCommand } from "./command-policy.js";
 
 export interface CommandResult {
   stdout: string;
@@ -32,7 +32,7 @@ export async function runCommand(
   }
 
   return new Promise((resolvePromise, reject) => {
-    const child = spawn(definition.executable, [...args], {
+    const child = spawn(command, args, {
       cwd,
       shell: false,
       windowsHide: true,
